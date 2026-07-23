@@ -83,6 +83,9 @@ export const transactions = sqliteTable(
     categoryId: integer("CategoryId").references(() => categories.id, {
       onDelete: "set null",
     }),
+    areaId: integer("AreaId")
+      .notNull()
+      .references(() => areas.id, { onDelete: "cascade" }),
     type: text("Type").notNull(), // 'income' | 'expense'
   },
   (table) => ({
@@ -96,5 +99,6 @@ export const transactions = sqliteTable(
     idxDate: index("idx_transactions_date").on(table.date),
     idxType: index("idx_transactions_type").on(table.type),
     idxCategory: index("idx_transactions_category").on(table.categoryId),
+    idxArea: index("idx_transactions_area").on(table.areaId),
   })
 );

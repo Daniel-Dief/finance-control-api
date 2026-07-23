@@ -41,9 +41,11 @@ CREATE TABLE Transactions (
     Date TEXT NOT NULL, -- ISO8601: YYYY-MM-DD
     Amount REAL NOT NULL,
     CategoryId INTEGER,
+    AreaId INTEGER NOT NULL,
     Type TEXT NOT NULL CHECK (Type IN ('income', 'expense')),
 
-    FOREIGN KEY (CategoryId) REFERENCES Categories(Id) ON DELETE SET NULL
+    FOREIGN KEY (CategoryId) REFERENCES Categories(Id) ON DELETE SET NULL,
+    FOREIGN KEY (AreaId) REFERENCES Areas(Id) ON DELETE CASCADE
 );
 
 -- =========================
@@ -53,6 +55,7 @@ CREATE TABLE Transactions (
 CREATE INDEX idx_transactions_date ON Transactions(Date);
 CREATE INDEX idx_transactions_type ON Transactions(Type);
 CREATE INDEX idx_transactions_category ON Transactions(CategoryId);
+CREATE INDEX idx_transactions_area ON Transactions(AreaId);
 
 CREATE INDEX idx_budget_area ON MonthlyBudget(AreaId);
 CREATE INDEX idx_budget_period ON MonthlyBudget(Year, Month);

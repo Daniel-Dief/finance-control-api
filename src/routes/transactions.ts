@@ -12,6 +12,7 @@ const TransactionSchema = z
     date: z.string().openapi({ example: "2026-07-15" }),
     amount: z.number().openapi({ example: 250.0 }),
     categoryId: z.number().int().nullable().openapi({ example: 1 }),
+    areaId: z.number().int().openapi({ example: 1 }),
     type: z.enum(["income", "expense"]).openapi({ example: "expense" }),
   })
   .openapi("Transaction");
@@ -24,6 +25,7 @@ const CreateTransactionSchema = z
       .openapi({ example: "2026-07-15" }),
     amount: z.number().openapi({ example: 250.0 }),
     categoryId: z.number().int().optional().openapi({ example: 1 }),
+    areaId: z.number().int().openapi({ example: 1 }),
     type: z.enum(["income", "expense"]).openapi({ example: "expense" }),
   })
   .openapi("CreateTransaction");
@@ -37,6 +39,7 @@ const UpdateTransactionSchema = z
       .openapi({ example: "2026-07-15" }),
     amount: z.number().optional().openapi({ example: 250.0 }),
     categoryId: z.number().int().nullable().optional().openapi({ example: 1 }),
+    areaId: z.number().int().optional().openapi({ example: 1 }),
     type: z.enum(["income", "expense"]).optional().openapi({ example: "expense" }),
   })
   .openapi("UpdateTransaction");
@@ -47,11 +50,12 @@ const listTransactionsRoute = createRoute({
   tags: ["Transactions"],
   summary: "Listar transações",
   description:
-    "Retorna todas as transações. Filtre por ?type=income|expense, ?categoryId=, ?from= (data mínima), ?to= (data máxima).",
+    "Retorna todas as transações. Filtre por ?type=income|expense, ?categoryId=, ?areaId=, ?from= (data mínima), ?to= (data máxima).",
   request: {
     query: z.object({
       type: z.enum(["income", "expense"]).optional().openapi({ example: "expense" }),
       categoryId: z.coerce.number().int().optional().openapi({ example: 1 }),
+      areaId: z.coerce.number().int().optional().openapi({ example: 1 }),
       from: z.string().optional().openapi({ example: "2026-01-01" }),
       to: z.string().optional().openapi({ example: "2026-12-31" }),
     }),
@@ -91,6 +95,7 @@ const createTransactionRoute = createRoute({
   path: "/",
   tags: ["Transactions"],
   summary: "Criar transação",
+  description: "Cria uma transação. O campo areaId é obrigatório.",
   request: {
     body: {
       content: { "application/json": { schema: CreateTransactionSchema } },
@@ -166,11 +171,12 @@ const deleteTransactionRoute = createRoute({
 
 app.openapi(listTransactionsRoute, async (c) => {
   const db = createDb(c.env.finance);
-  const { type, categoryId, from, to } = c.req.valid("query");
+  const { type, categoryId, areaId, from, to } = c.req.valid("query");
 
   const conditions = [];
   if (type) conditions.push(eq(transactions.type, type));
   if (categoryId !== undefined) conditions.push(eq(transactions.categoryId, categoryId));
+  if (areaId !== undefined) conditions.push(eq(transactions.areaId, areaId));
   if (from) conditions.push(gte(transactions.date, from));
   if (to) conditions.push(lte(transactions.date, to));
 
@@ -205,7 +211,7 @@ app.openapi(createTransactionRoute, async (c) => {
     return c.json(rows[0], 201);
   } catch (e: any) {
     if (e.message?.includes("FOREIGN")) {
-      return c.json({ error: "Categoria não encontrada" }, 400);
+      return c.json({ error: "Categoria ou área não encontrada" }, 400);
     }
     throw e;
   }
@@ -234,7 +240,7 @@ app.openapi(updateTransactionRoute, async (c) => {
     return c.json(rows[0], 200);
   } catch (e: any) {
     if (e.message?.includes("FOREIGN")) {
-      return c.json({ error: "Categoria não encontrada" }, 400);
+      return c.json({ error: "Categoria ou área não encontrada" }, 400);
     }
     throw e;
   }
