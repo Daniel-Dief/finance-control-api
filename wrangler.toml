@@ -1,0 +1,9 @@
+name = "finance-control-api"
+main = "src/index.ts"
+compatibility_date = "2024-01-01"
+
+[[d1_databases]]
+"binding" = "finance"
+"database_name" = "finance"
+"database_id" = "020cb85b-408c-4f96-aee6-72c4a07a6931"
+migrations_dir = "drizzle"
