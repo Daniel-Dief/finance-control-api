@@ -78,6 +78,7 @@ const createBudgetRoute = createRoute({
   description: "Cria um orçamento mensal para uma área. Não pode duplicar (year+month+areaId).",
   request: {
     body: {
+      required: true,
       content: { "application/json": { schema: CreateBudgetSchema } },
     },
   },
@@ -107,6 +108,7 @@ const updateBudgetRoute = createRoute({
       id: z.coerce.number().int().openapi({ param: { name: "id", in: "path" }, example: 1 }),
     }),
     body: {
+      required: true,
       content: { "application/json": { schema: UpdateBudgetSchema } },
     },
   },

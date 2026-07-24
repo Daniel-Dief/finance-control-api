@@ -69,6 +69,7 @@ const createAreaRoute = createRoute({
   summary: "Criar área",
   request: {
     body: {
+      required: true,
       content: { "application/json": { schema: CreateAreaSchema } },
     },
   },
@@ -94,6 +95,7 @@ const updateAreaRoute = createRoute({
       id: z.coerce.number().int().openapi({ param: { name: "id", in: "path" }, example: 1 }),
     }),
     body: {
+      required: true,
       content: { "application/json": { schema: UpdateAreaSchema } },
     },
   },

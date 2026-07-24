@@ -98,6 +98,7 @@ const createTransactionRoute = createRoute({
   description: "Cria uma transação. O campo areaId é obrigatório.",
   request: {
     body: {
+      required: true,
       content: { "application/json": { schema: CreateTransactionSchema } },
     },
   },
@@ -124,6 +125,7 @@ const updateTransactionRoute = createRoute({
       id: z.coerce.number().int().openapi({ param: { name: "id", in: "path" }, example: 1 }),
     }),
     body: {
+      required: true,
       content: { "application/json": { schema: UpdateTransactionSchema } },
     },
   },

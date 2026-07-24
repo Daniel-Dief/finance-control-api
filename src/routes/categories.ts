@@ -69,6 +69,7 @@ const createCategoryRoute = createRoute({
   summary: "Criar categoria",
   request: {
     body: {
+      required: true,
       content: { "application/json": { schema: CreateCategorySchema } },
     },
   },
@@ -94,6 +95,7 @@ const updateCategoryRoute = createRoute({
       id: z.coerce.number().int().openapi({ param: { name: "id", in: "path" }, example: 1 }),
     }),
     body: {
+      required: true,
       content: { "application/json": { schema: UpdateCategorySchema } },
     },
   },
