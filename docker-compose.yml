@@ -1,0 +1,13 @@
+services:
+  postgres:
+    image: postgres:18-trixie
+    container_name: finance-control-db
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+    volumes:
+      - ./postgres:/docker-entrypoint-initdb.d
+    restart: unless-stopped
