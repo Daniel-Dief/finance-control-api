@@ -22,7 +22,7 @@ CREATE TABLE "MonthlyBudget" (
     "Year" INTEGER NOT NULL,
     "Month" INTEGER NOT NULL CHECK ("Month" BETWEEN 1 AND 12),
     "AreaId" INTEGER NOT NULL,
-    "Amount" NUMERIC NOT NULL CHECK ("Amount" >= 0),
+    "Amount" INTEGER NOT NULL CHECK ("Amount" >= 0),
 
     CONSTRAINT fk_area
         FOREIGN KEY ("AreaId")
@@ -38,7 +38,7 @@ CREATE TABLE "MonthlyBudget" (
 CREATE TABLE "Transactions" (
     "Id" SERIAL PRIMARY KEY,
     "Date" DATE NOT NULL,
-    "Amount" NUMERIC NOT NULL,
+    "Amount" INTEGER NOT NULL,
     "CategoryId" INTEGER,
     "AreaId" INTEGER NOT NULL,
     "Type" TEXT NOT NULL CHECK ("Type" IN ('income', 'expense')),
