@@ -1,6 +1,6 @@
 package models
 
-type MonthlyBudget struct {
+type Budget struct {
 	ID     int   `json:"id"`
 	Year   int   `json:"year"`
 	Month  int   `json:"month"`
