@@ -5,9 +5,11 @@ import (
 	"database/sql"
 	"errors"
 	"finance-control-api/models"
+	"log"
 )
 
 // ListCategories retrieves a list of categories from the database, optionally filtered by name.
+// If name is empty, all categories are returned.
 func ListCategories(name *string) ([]models.Category, error) {
 	query := `
 		SELECT "Id", "Name"
@@ -17,9 +19,11 @@ func ListCategories(name *string) ([]models.Category, error) {
 
 	rows, err := Pool.QueryContext(context.Background(), query, name)
 	if err != nil {
-		return nil, err
+		log.Println("Error executing query:", err)
+		return nil, errors.New("Falha ao consultar o banco de dados, em caso de persistencia contatar o suporte.")
 	} else if rows.Err() != nil {
-		return nil, rows.Err()
+		log.Println("Error with rows:", rows.Err())
+		return nil, errors.New("Falha ao processar os resultados da consulta, em caso de persistencia contatar o suporte.")
 	}
 	defer rows.Close()
 
@@ -27,7 +31,8 @@ func ListCategories(name *string) ([]models.Category, error) {
 	for rows.Next() {
 		var c models.Category
 		if err := rows.Scan(&c.ID, &c.Name); err != nil {
-			return nil, err
+			log.Println("Error scanning row:", err)
+			return nil, errors.New("Falha indexar os resultados, em caso de persistencia contatar o suporte.")
 		}
 		result = append(result, c)
 	}
@@ -45,8 +50,12 @@ func GetCategoryByID(id int) (models.Category, error) {
 
 	var c models.Category
 	err := Pool.QueryRowContext(context.Background(), query, id).Scan(&c.ID, &c.Name)
-	if err != nil {
-		return models.Category{}, err
+
+	if errors.Is(err, sql.ErrNoRows) {
+		return models.Category{}, nil
+	} else if err != nil {
+		log.Println("Error executing query:", err)
+		return models.Category{}, errors.New("Falha ao consultar o banco de dados, em caso de persistencia contatar o suporte.")
 	}
 
 	return c, nil
@@ -63,7 +72,8 @@ func CreateCategory(name string) (models.Category, error) {
 	var c models.Category
 	err := Pool.QueryRowContext(context.Background(), query, name).Scan(&c.ID, &c.Name)
 	if err != nil {
-		return models.Category{}, err
+		log.Println("Error executing query:", err)
+		return models.Category{}, errors.New("Falha ao registrar a categoria no banco de dados, em caso de persistencia contatar o suporte.")
 	}
 
 	return c, nil
@@ -82,9 +92,10 @@ func UpdateCategory(id int, name string) (models.Category, error) {
 	err := Pool.QueryRowContext(context.Background(), query, id, name).Scan(&c.ID, &c.Name)
 
 	if errors.Is(err, sql.ErrNoRows) {
-		return models.Category{}, errors.New("Category not found")
+		return models.Category{}, errors.New("Falha ao atualizar a categoria: categoria não encontrada")
 	} else if err != nil {
-		return models.Category{}, err
+		log.Println("Error executing query:", err)
+		return models.Category{}, errors.New("Falha ao atualizar a categoria no banco de dados, em caso de persistencia contatar o suporte.")
 	}
 
 	return c, nil
@@ -104,11 +115,12 @@ func DeleteCategory(id int) error {
 
 	rowsAffected, err := res.RowsAffected()
 	if err != nil {
-		return err
+		log.Println("Error executing query:", err)
+		return errors.New("Falha ao deletar a categoria no banco de dados, em caso de persistencia contatar o suporte.")
 	}
 
 	if rowsAffected == 0 {
-		return errors.New("Category not found")
+		return errors.New("Categoria não encontrada")
 	}
 
 	return nil
