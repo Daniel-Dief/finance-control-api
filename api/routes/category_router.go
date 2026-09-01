@@ -2,24 +2,31 @@ package routes
 
 import (
 	"finance-control-api/database"
-	"finance-control-api/models"
 	"net/http"
-	"strconv"
 
 	"github.com/labstack/echo/v5"
 )
 
+// CategoryQueryParams defines the query parameters accepted by ListCategories.
+// Pointer fields stay nil when the parameter is omitted.
+type CategoryQueryParams struct {
+	Name *string `query:"name" validate:"omitempty"`
+}
+
+// CategoryBody defines the JSON body accepted by CreateCategory and UpdateCategory.
+type CategoryBody struct {
+	Name string `json:"name" validate:"required"`
+}
+
 // ListCategories defines the route for listing categories.
 func ListCategories(categoryGroup *echo.Group) {
 	categoryGroup.GET("/list", func(c *echo.Context) error {
-		name := c.QueryParam("name")
-
-		var namePtr *string
-		if name != "" {
-			namePtr = &name
+		var params CategoryQueryParams
+		if !bindAndValidateQuery(c, &params) {
+			return nil
 		}
 
-		categories, err := database.ListCategories(namePtr)
+		categories, err := database.ListCategories(params.Name)
 
 		if err != nil {
 			return c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
@@ -35,13 +42,12 @@ func ListCategories(categoryGroup *echo.Group) {
 // GetCategoryByID defines the route for retrieving a category by its ID.
 func GetCategoryByID(categoryGroup *echo.Group) {
 	categoryGroup.GET("/:id", func(c *echo.Context) error {
-		id, err := strconv.Atoi(c.Param("id"))
-
-		if err != nil {
-			return c.JSON(http.StatusBadRequest, map[string]interface{}{"error": "ID inválido"})
+		var params PathIDParams
+		if !bindAndValidatePath(c, &params) {
+			return nil
 		}
 
-		category, err := database.GetCategoryByID(id)
+		category, err := database.GetCategoryByID(params.ID)
 
 		if err != nil {
 			return c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
@@ -57,17 +63,13 @@ func GetCategoryByID(categoryGroup *echo.Group) {
 // CreateCategory defines the route for creating a new category.
 func CreateCategory(categoryGroup *echo.Group) {
 	categoryGroup.POST("/create", func(c *echo.Context) error {
-		var toCreateCategory models.Category
+		var body CategoryBody
 
-		if err := c.Bind(&toCreateCategory); err != nil {
-			return c.JSON(http.StatusBadRequest, map[string]interface{}{"error": "Erro ao processar o corpo da requisição."})
+		if !bindAndValidate(c, &body) {
+			return nil
 		}
 
-		if toCreateCategory.Name == "" {
-			return c.JSON(http.StatusBadRequest, map[string]interface{}{"error": "O nome da categoria é obrigatório"})
-		}
-
-		createdCategory, err := database.CreateCategory(toCreateCategory.Name)
+		createdCategory, err := database.CreateCategory(body.Name)
 
 		if err != nil {
 			return c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
@@ -80,22 +82,18 @@ func CreateCategory(categoryGroup *echo.Group) {
 // UpdateCategory defines the route for updating an existing category.
 func UpdateCategory(categoryGroup *echo.Group) {
 	categoryGroup.PUT("/:id", func(c *echo.Context) error {
-		id, err := strconv.Atoi(c.Param("id"))
-
-		if err != nil {
-			return c.JSON(http.StatusBadRequest, map[string]interface{}{"error": "ID inválido"})
+		var params PathIDParams
+		if !bindAndValidatePath(c, &params) {
+			return nil
 		}
 
-		var toUpdateCategory models.Category
-		if err := c.Bind(&toUpdateCategory); err != nil {
-			return c.JSON(http.StatusBadRequest, map[string]interface{}{"error": "Erro ao processar o corpo da requisição."})
+		var body CategoryBody
+
+		if !bindAndValidate(c, &body) {
+			return nil
 		}
 
-		if toUpdateCategory.Name == "" {
-			return c.JSON(http.StatusBadRequest, map[string]interface{}{"error": "O nome da categoria é obrigatório"})
-		}
-
-		updatedCategory, err := database.UpdateCategory(id, toUpdateCategory.Name)
+		updatedCategory, err := database.UpdateCategory(params.ID, body.Name)
 
 		if err != nil {
 			return c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
@@ -108,13 +106,12 @@ func UpdateCategory(categoryGroup *echo.Group) {
 // DeleteCategory defines the route for deleting a category by its ID.
 func DeleteCategory(categoryGroup *echo.Group) {
 	categoryGroup.DELETE("/:id", func(c *echo.Context) error {
-		id, err := strconv.Atoi(c.Param("id"))
-
-		if err != nil {
-			return c.JSON(http.StatusBadRequest, map[string]interface{}{"error": "ID inválido"})
+		var params PathIDParams
+		if !bindAndValidatePath(c, &params) {
+			return nil
 		}
 
-		err = database.DeleteCategory(id)
+		err := database.DeleteCategory(params.ID)
 		if err != nil {
 			return c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
 		}

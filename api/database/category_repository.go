@@ -110,7 +110,8 @@ func DeleteCategory(id int) error {
 
 	res, err := Pool.ExecContext(context.Background(), query, id)
 	if err != nil {
-		return err
+		log.Println("Error executing query:", err)
+		return errors.New("Falha ao deletar a categoria no banco de dados, em caso de persistencia contatar o suporte.")
 	}
 
 	rowsAffected, err := res.RowsAffected()

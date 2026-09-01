@@ -12,19 +12,19 @@ import (
 func main() {
 	err := godotenv.Load("../.env")
 	if err != nil {
-		panic("Error loading .env file: " + err.Error())
+		log.Fatal("Error loading .env file: " + err.Error())
 	}
 	log.Println("Environment variables loaded successfully.")
 
 	err = database.InitPool()
 	if err != nil {
-		panic("Error initializing database pool: " + err.Error())
+		log.Fatal("Error initializing database pool: " + err.Error())
 	}
 	log.Println("Database pool initialized successfully.")
 
 	err = database.PingDatabase()
 	if err != nil {
-		panic("Error pinging the database: " + err.Error())
+		log.Fatal("Error pinging the database: " + err.Error())
 	}
 	log.Println("Database connection successful.")
 

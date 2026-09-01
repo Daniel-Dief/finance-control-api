@@ -2,19 +2,30 @@ package routes
 
 import (
 	"finance-control-api/database"
-	"finance-control-api/models"
 	"net/http"
-	"strconv"
 
 	"github.com/labstack/echo/v5"
 )
 
+// AreaQueryParams defines the query parameters accepted by ListAreas.
+type AreaQueryParams struct {
+	Name string `query:"name" validate:"omitempty"`
+}
+
+// AreaBody defines the JSON body accepted by CreateArea and UpdateArea.
+type AreaBody struct {
+	Name string `json:"name" validate:"required"`
+}
+
 // ListAreas defines the route for listing areas.
 func ListAreas(areaGroup *echo.Group) {
 	areaGroup.GET("/list", func(c *echo.Context) error {
-		name := c.QueryParam("name")
+		var params AreaQueryParams
+		if !bindAndValidateQuery(c, &params) {
+			return nil
+		}
 
-		areas, err := database.ListAreas(name)
+		areas, err := database.ListAreas(params.Name)
 
 		if err != nil {
 			return c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
@@ -30,13 +41,12 @@ func ListAreas(areaGroup *echo.Group) {
 // GetAreaByID defines the route for retrieving an area by its ID.
 func GetAreaByID(areaGroup *echo.Group) {
 	areaGroup.GET("/:id", func(c *echo.Context) error {
-		id, err := strconv.Atoi(c.Param("id"))
-
-		if err != nil {
-			return c.JSON(http.StatusBadRequest, map[string]interface{}{"error": "ID inválido"})
+		var params PathIDParams
+		if !bindAndValidatePath(c, &params) {
+			return nil
 		}
 
-		area, err := database.GetAreaByID(id)
+		area, err := database.GetAreaByID(params.ID)
 
 		if err != nil {
 			return c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
@@ -52,17 +62,13 @@ func GetAreaByID(areaGroup *echo.Group) {
 // CreateArea defines the route for creating a new area.
 func CreateArea(areaGroup *echo.Group) {
 	areaGroup.POST("/create", func(c *echo.Context) error {
-		var toCreateArea models.Area
+		var body AreaBody
 
-		if err := c.Bind(&toCreateArea); err != nil {
-			return c.JSON(http.StatusBadRequest, map[string]interface{}{"error": "Erro ao processar o corpo da requisição."})
+		if !bindAndValidate(c, &body) {
+			return nil
 		}
 
-		if toCreateArea.Name == "" {
-			return c.JSON(http.StatusBadRequest, map[string]interface{}{"error": "O nome da área é obrigatório"})
-		}
-
-		createdArea, err := database.CreateArea(toCreateArea.Name)
+		createdArea, err := database.CreateArea(body.Name)
 
 		if err != nil {
 			return c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
@@ -75,22 +81,18 @@ func CreateArea(areaGroup *echo.Group) {
 // UpdateArea defines the route for updating an existing area.
 func UpdateArea(areaGroup *echo.Group) {
 	areaGroup.PUT("/:id", func(c *echo.Context) error {
-		id, err := strconv.Atoi(c.Param("id"))
-
-		if err != nil {
-			return c.JSON(http.StatusBadRequest, map[string]interface{}{"error": "ID inválido"})
+		var params PathIDParams
+		if !bindAndValidatePath(c, &params) {
+			return nil
 		}
 
-		var toUpdateArea models.Area
-		if err := c.Bind(&toUpdateArea); err != nil {
-			return c.JSON(http.StatusBadRequest, map[string]interface{}{"error": "Erro ao processar o corpo da requisição."})
+		var body AreaBody
+
+		if !bindAndValidate(c, &body) {
+			return nil
 		}
 
-		if toUpdateArea.Name == "" {
-			return c.JSON(http.StatusBadRequest, map[string]interface{}{"error": "O nome da área é obrigatório"})
-		}
-
-		updatedArea, err := database.UpdateArea(id, toUpdateArea.Name)
+		updatedArea, err := database.UpdateArea(params.ID, body.Name)
 
 		if err != nil {
 			return c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
@@ -103,13 +105,12 @@ func UpdateArea(areaGroup *echo.Group) {
 // DeleteArea defines the route for deleting an area by its ID.
 func DeleteArea(areaGroup *echo.Group) {
 	areaGroup.DELETE("/:id", func(c *echo.Context) error {
-		id, err := strconv.Atoi(c.Param("id"))
-
-		if err != nil {
-			return c.JSON(http.StatusBadRequest, map[string]interface{}{"error": "ID inválido"})
+		var params PathIDParams
+		if !bindAndValidatePath(c, &params) {
+			return nil
 		}
 
-		err = database.DeleteArea(id)
+		err := database.DeleteArea(params.ID)
 		if err != nil {
 			return c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
 		}
