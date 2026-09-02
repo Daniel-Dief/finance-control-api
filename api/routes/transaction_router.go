@@ -16,6 +16,8 @@ type TransactionQueryParams struct {
 	AreaID     *int    `query:"area_id" validate:"omitempty,gt=0"`
 	From       *string `query:"from" validate:"omitempty,datetime=2006-01-02"`
 	To         *string `query:"to" validate:"omitempty,datetime=2006-01-02"`
+	Page       *int    `query:"page" validate:"omitempty,min=1"`
+	Limit      *int    `query:"limit" validate:"omitempty,min=1,max=100"`
 }
 
 // TransactionBody defines the JSON body accepted by CreateTransaction.
@@ -49,8 +51,9 @@ type TransactionUpdateBody struct {
 //	@Param			area_id			query		int		false	"Filtro por ID da área"
 //	@Param			from			query		string	false	"Data inicial (AAAA-MM-DD)"				Format(2006-01-02)
 //	@Param			to				query		string	false	"Data final (AAAA-MM-DD)"					Format(2006-01-02)
-//	@Success		200				{array}		models.Transaction
-//	@Success		204				{object}	map[string]string
+//	@Param			page			query		int		false	"Número da página (padrão 1)"
+//	@Param			limit			query		int		false	"Quantidade por página (padrão 50, máximo 100)"
+//	@Success		200				{object}	database.PaginatedResult[models.Transaction]
 //	@Failure		500				{object}	map[string]string
 //	@Router			/transactions/list [get]
 func ListTransactions(transactionGroup *echo.Group) {
@@ -68,12 +71,14 @@ func ListTransactions(transactionGroup *echo.Group) {
 			To:         params.To,
 		}
 
-		transactions, err := database.ListTransactions(filters)
+		pag := parsePagination(params.Page, params.Limit)
+
+		transactions, err := database.ListTransactions(filters, pag)
 
 		if err != nil {
 			return c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
 		}
-		if len(transactions) == 0 {
+		if len(transactions.Data) == 0 && transactions.Total == 0 {
 			return c.JSON(http.StatusNoContent, map[string]interface{}{"info": "Nenhuma transação encontrada"})
 		}
 

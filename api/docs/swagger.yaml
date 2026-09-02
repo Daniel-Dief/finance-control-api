@@ -1,5 +1,65 @@
 basePath: /
 definitions:
+  database.PaginatedResult-models_Area:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/models.Area'
+        type: array
+      limit:
+        type: integer
+      page:
+        type: integer
+      total:
+        type: integer
+      total_pages:
+        type: integer
+    type: object
+  database.PaginatedResult-models_Budget:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/models.Budget'
+        type: array
+      limit:
+        type: integer
+      page:
+        type: integer
+      total:
+        type: integer
+      total_pages:
+        type: integer
+    type: object
+  database.PaginatedResult-models_Category:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/models.Category'
+        type: array
+      limit:
+        type: integer
+      page:
+        type: integer
+      total:
+        type: integer
+      total_pages:
+        type: integer
+    type: object
+  database.PaginatedResult-models_Transaction:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/models.Transaction'
+        type: array
+      limit:
+        type: integer
+      page:
+        type: integer
+      total:
+        type: integer
+      total_pages:
+        type: integer
+    type: object
   models.Area:
     properties:
       id:
@@ -301,21 +361,21 @@ paths:
         in: query
         name: name
         type: string
+      - description: Número da página (padrão 1)
+        in: query
+        name: page
+        type: integer
+      - description: Quantidade por página (padrão 50, máximo 100)
+        in: query
+        name: limit
+        type: integer
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            items:
-              $ref: '#/definitions/models.Area'
-            type: array
-        "204":
-          description: No Content
-          schema:
-            additionalProperties:
-              type: string
-            type: object
+            $ref: '#/definitions/database.PaginatedResult-models_Area'
         "500":
           description: Internal Server Error
           schema:
@@ -501,21 +561,21 @@ paths:
         in: query
         name: area_id
         type: integer
+      - description: Número da página (padrão 1)
+        in: query
+        name: page
+        type: integer
+      - description: Quantidade por página (padrão 50, máximo 100)
+        in: query
+        name: limit
+        type: integer
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            items:
-              $ref: '#/definitions/models.Budget'
-            type: array
-        "204":
-          description: No Content
-          schema:
-            additionalProperties:
-              type: string
-            type: object
+            $ref: '#/definitions/database.PaginatedResult-models_Budget'
         "500":
           description: Internal Server Error
           schema:
@@ -692,21 +752,21 @@ paths:
         in: query
         name: name
         type: string
+      - description: Número da página (padrão 1)
+        in: query
+        name: page
+        type: integer
+      - description: Quantidade por página (padrão 50, máximo 100)
+        in: query
+        name: limit
+        type: integer
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            items:
-              $ref: '#/definitions/models.Category'
-            type: array
-        "204":
-          description: No Content
-          schema:
-            additionalProperties:
-              type: string
-            type: object
+            $ref: '#/definitions/database.PaginatedResult-models_Category'
         "500":
           description: Internal Server Error
           schema:
@@ -905,21 +965,21 @@ paths:
         in: query
         name: to
         type: string
+      - description: Número da página (padrão 1)
+        in: query
+        name: page
+        type: integer
+      - description: Quantidade por página (padrão 50, máximo 100)
+        in: query
+        name: limit
+        type: integer
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            items:
-              $ref: '#/definitions/models.Transaction'
-            type: array
-        "204":
-          description: No Content
-          schema:
-            additionalProperties:
-              type: string
-            type: object
+            $ref: '#/definitions/database.PaginatedResult-models_Transaction'
         "500":
           description: Internal Server Error
           schema:

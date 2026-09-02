@@ -8,16 +8,29 @@ import (
 	"log"
 )
 
-// ListCategories retrieves a list of categories from the database, optionally filtered by name.
-// If name is empty, all categories are returned.
-func ListCategories(name *string) ([]models.Category, error) {
-	query := `
-		SELECT "Id", "Name"
-		FROM "Categories"
+// ListCategories retrieves a paginated list of categories from the database,
+// optionally filtered by name. If name is empty, all categories are returned.
+func ListCategories(name *string, pag Pagination) (*PaginatedResult[models.Category], error) {
+	where := `
 		WHERE ($1::text IS NULL OR "Name" ILIKE '%' || $1 || '%')
 	`
 
-	rows, err := Pool.QueryContext(context.Background(), query, name)
+	var total int
+	if err := Pool.QueryRowContext(context.Background(),
+		`SELECT COUNT(*) FROM "Categories" `+where, name).Scan(&total); err != nil {
+		log.Println("Error executing count query:", err)
+		return nil, ErrGenericDatabase
+	}
+
+	query := `
+		SELECT "Id", "Name"
+		FROM "Categories"
+		` + where + `
+		ORDER BY "Id"
+		LIMIT $2 OFFSET $3
+	`
+
+	rows, err := Pool.QueryContext(context.Background(), query, name, pag.Limit, pag.Offset())
 	if err != nil {
 		log.Println("Error executing query:", err)
 		return nil, ErrGenericDatabase
@@ -39,7 +52,8 @@ func ListCategories(name *string) ([]models.Category, error) {
 		result = append(result, c)
 	}
 
-	return result, nil
+	paginated := newPaginatedResult(result, pag, total)
+	return &paginated, nil
 }
 
 // GetCategoryByID retrieves a category from the database by its ID.

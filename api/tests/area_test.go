@@ -41,12 +41,12 @@ func TestListAreasWithNameFilter(t *testing.T) {
 
 	assert.Equal(t, http.StatusOK, rec.Code)
 
-	var areas []models.Area
+	var areas database.PaginatedResult[models.Area]
 	err = json.Unmarshal(rec.Body.Bytes(), &areas)
 	assert.NoError(t, err)
-	assert.NotEmpty(t, areas)
+	assert.NotEmpty(t, areas.Data)
 
-	for _, a := range areas {
+	for _, a := range areas.Data {
 		database.DeleteArea(a.ID)
 	}
 }

@@ -1,6 +1,7 @@
 package helpers
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"os"
@@ -38,7 +39,8 @@ func CheckEnvs() error {
 	viper.SetDefault("ENV", "development")
 
 	if err := viper.ReadInConfig(); err != nil {
-		if _, ok := err.(viper.ConfigFileNotFoundError); !ok {
+		var notFound viper.ConfigFileNotFoundError
+		if !errors.As(err, &notFound) && !os.IsNotExist(err) {
 			return fmt.Errorf("error loading .env file: %w", err)
 		}
 		log.Println("No .env file found, using environment variables.")

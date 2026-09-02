@@ -15,17 +15,31 @@ type BudgetProps struct {
 	Amount *int
 }
 
-// ListBudgets returns all budgets. You can filter by year, month and/or areaId.
-func ListBudgets(props BudgetProps) ([]models.Budget, error) {
-	query := `
-		SELECT "Id", "Year", "Month", "AreaId", "Amount"
-		FROM "MonthlyBudget"
+// ListBudgets returns a paginated list of budgets. You can filter by year,
+// month and/or areaId.
+func ListBudgets(props BudgetProps, pag Pagination) (*PaginatedResult[models.Budget], error) {
+	where := `
 		WHERE ($1::integer IS NULL OR "Year" = $1)
 		AND ($2::integer IS NULL OR "Month" = $2)
 		AND ($3::integer IS NULL OR "AreaId" = $3)
 	`
 
-	rows, err := Pool.QueryContext(context.Background(), query, props.Year, props.Month, props.AreaId)
+	var total int
+	if err := Pool.QueryRowContext(context.Background(),
+		`SELECT COUNT(*) FROM "MonthlyBudget" `+where, props.Year, props.Month, props.AreaId).Scan(&total); err != nil {
+		log.Println("Error executing count query:", err)
+		return nil, ErrGenericDatabase
+	}
+
+	query := `
+		SELECT "Id", "Year", "Month", "AreaId", "Amount"
+		FROM "MonthlyBudget"
+		` + where + `
+		ORDER BY "Id"
+		LIMIT $4 OFFSET $5
+	`
+
+	rows, err := Pool.QueryContext(context.Background(), query, props.Year, props.Month, props.AreaId, pag.Limit, pag.Offset())
 	if err != nil {
 		log.Println("Error executing query:", err)
 		return nil, ErrGenericDatabase
@@ -47,7 +61,8 @@ func ListBudgets(props BudgetProps) ([]models.Budget, error) {
 		result = append(result, b)
 	}
 
-	return result, nil
+	paginated := newPaginatedResult(result, pag, total)
+	return &paginated, nil
 }
 
 // GetBudgetByID retrieves a budget by its ID from the database.

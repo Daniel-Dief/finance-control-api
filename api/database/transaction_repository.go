@@ -24,11 +24,10 @@ type TransactionFilters struct {
 	To         *string
 }
 
-// ListTransactions retrieves transactions from the database based on the provided filters.
-func ListTransactions(filters TransactionFilters) ([]models.Transaction, error) {
-	query := `
-		SELECT "Id", "Date", "Amount", "CategoryId", "AreaId", "Type"
-		FROM "Transactions"
+// ListTransactions retrieves a paginated list of transactions from the database
+// based on the provided filters.
+func ListTransactions(filters TransactionFilters, pag Pagination) (*PaginatedResult[models.Transaction], error) {
+	where := `
 		WHERE ($1::text IS NULL OR "Type" = $1)
 		AND ($2::integer IS NULL OR "CategoryId" = $2)
 		AND ($3::integer IS NULL OR "AreaId" = $3)
@@ -36,7 +35,24 @@ func ListTransactions(filters TransactionFilters) ([]models.Transaction, error) 
 		AND ($5::date IS NULL OR "Date" <= $5)
 	`
 
-	rows, err := Pool.QueryContext(context.Background(), query, filters.Type, filters.CategoryID, filters.AreaID, filters.From, filters.To)
+	var total int
+	if err := Pool.QueryRowContext(context.Background(),
+		`SELECT COUNT(*) FROM "Transactions" `+where,
+		filters.Type, filters.CategoryID, filters.AreaID, filters.From, filters.To).Scan(&total); err != nil {
+		log.Println("Error executing count query:", err)
+		return nil, ErrGenericDatabase
+	}
+
+	query := `
+		SELECT "Id", "Date", "Amount", "CategoryId", "AreaId", "Type"
+		FROM "Transactions"
+		` + where + `
+		ORDER BY "Id"
+		LIMIT $6 OFFSET $7
+	`
+
+	rows, err := Pool.QueryContext(context.Background(), query,
+		filters.Type, filters.CategoryID, filters.AreaID, filters.From, filters.To, pag.Limit, pag.Offset())
 	if err != nil {
 		log.Println("Error executing query:", err)
 		return nil, ErrGenericDatabase
@@ -58,7 +74,8 @@ func ListTransactions(filters TransactionFilters) ([]models.Transaction, error) 
 		result = append(result, t)
 	}
 
-	return result, nil
+	paginated := newPaginatedResult(result, pag, total)
+	return &paginated, nil
 }
 
 // GetTransactionByID retrieves a single transaction from the database based on its ID.

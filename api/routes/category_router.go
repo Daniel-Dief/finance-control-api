@@ -11,7 +11,9 @@ import (
 // CategoryQueryParams defines the query parameters accepted by ListCategories.
 // Pointer fields stay nil when the parameter is omitted.
 type CategoryQueryParams struct {
-	Name *string `query:"name" validate:"omitempty"`
+	Name  *string `query:"name" validate:"omitempty"`
+	Page  *int    `query:"page" validate:"omitempty,min=1"`
+	Limit *int    `query:"limit" validate:"omitempty,min=1,max=100"`
 }
 
 // CategoryBody defines the JSON body accepted by CreateCategory and UpdateCategory.
@@ -27,8 +29,9 @@ type CategoryBody struct {
 //	@Accept			json
 //	@Produce		json
 //	@Param			name	query		string	false	"Filtro por nome da categoria"
-//	@Success		200		{array}		models.Category
-//	@Success		204		{object}	map[string]string
+//	@Param			page	query		int		false	"Número da página (padrão 1)"
+//	@Param			limit	query		int		false	"Quantidade por página (padrão 50, máximo 100)"
+//	@Success		200		{object}	database.PaginatedResult[models.Category]
 //	@Failure		500		{object}	map[string]string
 //	@Router			/categories/list [get]
 func ListCategories(categoryGroup *echo.Group) {
@@ -38,12 +41,14 @@ func ListCategories(categoryGroup *echo.Group) {
 			return nil
 		}
 
-		categories, err := database.ListCategories(params.Name)
+		pag := parsePagination(params.Page, params.Limit)
+
+		categories, err := database.ListCategories(params.Name, pag)
 
 		if err != nil {
 			return c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
 		}
-		if len(categories) == 0 {
+		if len(categories.Data) == 0 && categories.Total == 0 {
 			return c.JSON(http.StatusNoContent, map[string]interface{}{"info": "Nenhuma categoria encontrada"})
 		}
 

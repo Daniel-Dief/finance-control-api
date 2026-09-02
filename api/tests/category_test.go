@@ -41,12 +41,12 @@ func TestListCategoriesWithNameFilter(t *testing.T) {
 
 	assert.Equal(t, http.StatusOK, rec.Code)
 
-	var categories []models.Category
+	var categories database.PaginatedResult[models.Category]
 	err = json.Unmarshal(rec.Body.Bytes(), &categories)
 	assert.NoError(t, err)
-	assert.NotEmpty(t, categories)
+	assert.NotEmpty(t, categories.Data)
 
-	for _, c := range categories {
+	for _, c := range categories.Data {
 		database.DeleteCategory(c.ID)
 	}
 }

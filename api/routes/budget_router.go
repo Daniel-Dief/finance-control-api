@@ -14,6 +14,8 @@ type BudgetQueryParams struct {
 	Year   *int `query:"year" validate:"omitempty,min=1"`
 	Month  *int `query:"month" validate:"omitempty,min=1,max=12"`
 	AreaID *int `query:"area_id" validate:"omitempty,gt=0"`
+	Page   *int `query:"page" validate:"omitempty,min=1"`
+	Limit  *int `query:"limit" validate:"omitempty,min=1,max=100"`
 }
 
 // BudgetBody defines the JSON body accepted by CreateBudget.
@@ -43,8 +45,9 @@ type BudgetUpdateBody struct {
 //	@Param			year		query		int	false	"Filtro por ano"
 //	@Param			month		query		int	false	"Filtro por mês (1-12)"
 //	@Param			area_id		query		int	false	"Filtro por ID da área"
-//	@Success		200			{array}		models.Budget
-//	@Success		204			{object}	map[string]string
+//	@Param			page		query		int	false	"Número da página (padrão 1)"
+//	@Param			limit		query		int	false	"Quantidade por página (padrão 50, máximo 100)"
+//	@Success		200			{object}	database.PaginatedResult[models.Budget]
 //	@Failure		500			{object}	map[string]string
 //	@Router			/budgets/list [get]
 func ListBudgets(budgetGroup *echo.Group) {
@@ -60,12 +63,14 @@ func ListBudgets(budgetGroup *echo.Group) {
 			AreaId: params.AreaID,
 		}
 
-		budgets, err := database.ListBudgets(props)
+		pag := parsePagination(params.Page, params.Limit)
+
+		budgets, err := database.ListBudgets(props, pag)
 
 		if err != nil {
 			return c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
 		}
-		if len(budgets) == 0 {
+		if len(budgets.Data) == 0 && budgets.Total == 0 {
 			return c.JSON(http.StatusNoContent, map[string]interface{}{"info": "Nenhum orçamento encontrado"})
 		}
 

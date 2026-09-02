@@ -46,12 +46,12 @@ func TestListBudgetsWithFilters(t *testing.T) {
 
 	assert.Equal(t, http.StatusOK, rec.Code)
 
-	var budgets []models.Budget
+	var budgets database.PaginatedResult[models.Budget]
 	err = json.Unmarshal(rec.Body.Bytes(), &budgets)
 	assert.NoError(t, err)
-	assert.NotEmpty(t, budgets)
+	assert.NotEmpty(t, budgets.Data)
 
-	for _, b := range budgets {
+	for _, b := range budgets.Data {
 		database.DeleteBudget(b.ID)
 	}
 	database.DeleteArea(area.ID)

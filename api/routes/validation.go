@@ -2,6 +2,7 @@ package routes
 
 import (
 	"errors"
+	"finance-control-api/database"
 	"fmt"
 	"reflect"
 	"strconv"
@@ -60,6 +61,22 @@ func errorMessage(err error) string {
 // PathIDParams defines the `:id` path parameter used by the resource routes.
 type PathIDParams struct {
 	ID int `param:"id" validate:"required,gt=0"`
+}
+
+// parsePagination builds a database.Pagination from optional page/limit query
+// parameters, applying the default values when they are not provided.
+func parsePagination(page, limit *int) database.Pagination {
+	p := 1
+	if page != nil {
+		p = *page
+	}
+
+	l := 50
+	if limit != nil {
+		l = *limit
+	}
+
+	return database.Pagination{Page: p, Limit: l}
 }
 
 // bindAndValidatePath binds the URL path parameters into the destination

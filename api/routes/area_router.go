@@ -10,7 +10,9 @@ import (
 
 // AreaQueryParams defines the query parameters accepted by ListAreas.
 type AreaQueryParams struct {
-	Name string `query:"name" validate:"omitempty"`
+	Name  string `query:"name" validate:"omitempty"`
+	Page  *int   `query:"page" validate:"omitempty,min=1"`
+	Limit *int   `query:"limit" validate:"omitempty,min=1,max=100"`
 }
 
 // AreaBody defines the JSON body accepted by CreateArea and UpdateArea.
@@ -26,8 +28,9 @@ type AreaBody struct {
 //	@Accept			json
 //	@Produce		json
 //	@Param			name	query		string	false	"Filtro por nome da área"
-//	@Success		200		{array}		models.Area
-//	@Success		204		{object}	map[string]string
+//	@Param			page	query		int		false	"Número da página (padrão 1)"
+//	@Param			limit	query		int		false	"Quantidade por página (padrão 50, máximo 100)"
+//	@Success		200		{object}	database.PaginatedResult[models.Area]
 //	@Failure		500		{object}	map[string]string
 //	@Router			/areas/list [get]
 func ListAreas(areaGroup *echo.Group) {
@@ -37,12 +40,14 @@ func ListAreas(areaGroup *echo.Group) {
 			return nil
 		}
 
-		areas, err := database.ListAreas(params.Name)
+		pag := parsePagination(params.Page, params.Limit)
+
+		areas, err := database.ListAreas(params.Name, pag)
 
 		if err != nil {
 			return c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
 		}
-		if len(areas) == 0 {
+		if len(areas.Data) == 0 && areas.Total == 0 {
 			return c.JSON(http.StatusNoContent, map[string]interface{}{"info": "Nenhuma área encontrada"})
 		}
 

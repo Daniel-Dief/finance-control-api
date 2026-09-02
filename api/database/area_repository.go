@@ -8,16 +8,29 @@ import (
 	"log"
 )
 
-// ListAreas retrieves a list of areas from the database, optionally filtered by name.
-// If name is empty, all areas are returned.
-func ListAreas(name string) ([]models.Area, error) {
-	query := `
-		SELECT "Id", "Name"
-		FROM "Areas"
+// ListAreas retrieves a paginated list of areas from the database, optionally
+// filtered by name. If name is empty, all areas are returned.
+func ListAreas(name string, pag Pagination) (*PaginatedResult[models.Area], error) {
+	where := `
 		WHERE ($1::text IS NULL OR "Name" ILIKE '%' || $1 || '%')
 	`
 
-	rows, err := Pool.QueryContext(context.Background(), query, name)
+	var total int
+	if err := Pool.QueryRowContext(context.Background(),
+		`SELECT COUNT(*) FROM "Areas" `+where, name).Scan(&total); err != nil {
+		log.Println("Error executing count query:", err)
+		return nil, ErrGenericDatabase
+	}
+
+	query := `
+		SELECT "Id", "Name"
+		FROM "Areas"
+		` + where + `
+		ORDER BY "Id"
+		LIMIT $2 OFFSET $3
+	`
+
+	rows, err := Pool.QueryContext(context.Background(), query, name, pag.Limit, pag.Offset())
 	if err != nil {
 		log.Println("Error executing query:", err)
 		return nil, ErrGenericDatabase
@@ -39,7 +52,8 @@ func ListAreas(name string) ([]models.Area, error) {
 		result = append(result, a)
 	}
 
-	return result, nil
+	paginated := newPaginatedResult(result, pag, total)
+	return &paginated, nil
 }
 
 // GetAreaByID retrieves an area by its ID from the database.

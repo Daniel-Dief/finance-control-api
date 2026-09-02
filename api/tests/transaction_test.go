@@ -51,12 +51,12 @@ func TestListTransactionsWithFilters(t *testing.T) {
 
 	assert.Equal(t, http.StatusOK, rec.Code)
 
-	var transactions []models.Transaction
+	var transactions database.PaginatedResult[models.Transaction]
 	err = json.Unmarshal(rec.Body.Bytes(), &transactions)
 	assert.NoError(t, err)
-	assert.NotEmpty(t, transactions)
+	assert.NotEmpty(t, transactions.Data)
 
-	for _, tr := range transactions {
+	for _, tr := range transactions.Data {
 		database.DeleteTransaction(tr.ID)
 	}
 	database.DeleteCategory(category.ID)
