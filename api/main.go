@@ -3,11 +3,11 @@ package main
 import (
 	"finance-control-api/database"
 	_ "finance-control-api/docs"
+	"finance-control-api/helpers"
 	"finance-control-api/middlewares"
 	"finance-control-api/routes"
 	"log"
 
-	"github.com/joho/godotenv"
 	"github.com/labstack/echo/v5"
 )
 
@@ -17,23 +17,23 @@ import (
 // @host localhost:1323
 // @BasePath /
 func main() {
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatal("Error loading .env file: " + err.Error())
+	if err := helpers.CheckEnvs(); err != nil {
+		log.Fatal("Environment check failed: " + err.Error())
+	} else {
+		log.Println("Environment variables loaded successfully.")
 	}
-	log.Println("Environment variables loaded successfully.")
 
-	err = database.InitPool()
-	if err != nil {
+	if err := database.InitPool(); err != nil {
 		log.Fatal("Error initializing database pool: " + err.Error())
+	} else {
+		log.Println("Database pool initialized successfully.")
 	}
-	log.Println("Database pool initialized successfully.")
 
-	err = database.PingDatabase()
-	if err != nil {
+	if err := database.PingDatabase(); err != nil {
 		log.Fatal("Error pinging the database: " + err.Error())
+	} else {
+		log.Println("Database connection successful.")
 	}
-	log.Println("Database connection successful.")
 
 	echoAPI := echo.New()
 
