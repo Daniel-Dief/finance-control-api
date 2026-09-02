@@ -29,3 +29,8 @@ services:
       postgres:
         condition: service_healthy
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:1323/health || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
