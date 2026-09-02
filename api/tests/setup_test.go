@@ -13,18 +13,15 @@ import (
 )
 
 func TestMain(m *testing.M) {
-	err := godotenv.Load("../../.env")
-	if err != nil {
-		log.Fatal("Error loading .env file: " + err.Error())
+	if err := godotenv.Load("../../.env"); err != nil {
+		log.Println("No .env file found, using environment variables.")
 	}
 
-	err = database.InitPool()
-	if err != nil {
+	if err := database.InitPool(); err != nil {
 		log.Fatal("Error initializing database pool: " + err.Error())
 	}
 
-	err = database.PingDatabase()
-	if err != nil {
+	if err := database.PingDatabase(); err != nil {
 		log.Fatal("Error pinging the database: " + err.Error())
 	}
 
