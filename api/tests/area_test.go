@@ -82,7 +82,7 @@ func TestGetAreaByIDNotFound(t *testing.T) {
 
 	e.ServeHTTP(rec, req)
 
-	assert.Equal(t, http.StatusNoContent, rec.Code)
+	assert.Equal(t, http.StatusNotFound, rec.Code)
 }
 
 func TestGetAreaByIDInvalid(t *testing.T) {
@@ -180,7 +180,7 @@ func TestUpdateAreaNotFound(t *testing.T) {
 
 	e.ServeHTTP(rec, req)
 
-	assert.Equal(t, http.StatusInternalServerError, rec.Code)
+	assert.Equal(t, http.StatusNotFound, rec.Code)
 }
 
 func TestUpdateAreaInvalidID(t *testing.T) {
@@ -227,7 +227,7 @@ func TestDeleteAreaNotFound(t *testing.T) {
 
 	e.ServeHTTP(rec, req)
 
-	assert.Equal(t, http.StatusInternalServerError, rec.Code)
+	assert.Equal(t, http.StatusNotFound, rec.Code)
 }
 
 func TestDeleteAreaInvalidID(t *testing.T) {

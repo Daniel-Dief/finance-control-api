@@ -106,7 +106,7 @@ func TestGetTransactionByIDNotFound(t *testing.T) {
 
 	e.ServeHTTP(rec, req)
 
-	assert.Equal(t, http.StatusNoContent, rec.Code)
+	assert.Equal(t, http.StatusNotFound, rec.Code)
 }
 
 func TestGetTransactionByIDInvalid(t *testing.T) {
@@ -280,7 +280,7 @@ func TestUpdateTransactionNotFound(t *testing.T) {
 
 	e.ServeHTTP(rec, req)
 
-	assert.Equal(t, http.StatusInternalServerError, rec.Code)
+	assert.Equal(t, http.StatusNotFound, rec.Code)
 }
 
 func TestUpdateTransactionInvalidID(t *testing.T) {
@@ -338,7 +338,7 @@ func TestDeleteTransactionNotFound(t *testing.T) {
 
 	e.ServeHTTP(rec, req)
 
-	assert.Equal(t, http.StatusInternalServerError, rec.Code)
+	assert.Equal(t, http.StatusNotFound, rec.Code)
 }
 
 func TestDeleteTransactionInvalidID(t *testing.T) {

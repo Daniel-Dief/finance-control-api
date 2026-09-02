@@ -94,7 +94,7 @@ func TestGetBudgetByIDNotFound(t *testing.T) {
 
 	e.ServeHTTP(rec, req)
 
-	assert.Equal(t, http.StatusNoContent, rec.Code)
+	assert.Equal(t, http.StatusNotFound, rec.Code)
 }
 
 func TestGetBudgetByIDInvalid(t *testing.T) {
@@ -225,7 +225,7 @@ func TestUpdateBudgetNotFound(t *testing.T) {
 
 	e.ServeHTTP(rec, req)
 
-	assert.Equal(t, http.StatusInternalServerError, rec.Code)
+	assert.Equal(t, http.StatusNotFound, rec.Code)
 }
 
 func TestUpdateBudgetInvalidID(t *testing.T) {
@@ -278,7 +278,7 @@ func TestDeleteBudgetNotFound(t *testing.T) {
 
 	e.ServeHTTP(rec, req)
 
-	assert.Equal(t, http.StatusInternalServerError, rec.Code)
+	assert.Equal(t, http.StatusNotFound, rec.Code)
 }
 
 func TestDeleteBudgetInvalidID(t *testing.T) {

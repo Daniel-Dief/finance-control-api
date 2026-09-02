@@ -82,7 +82,7 @@ func TestGetCategoryByIDNotFound(t *testing.T) {
 
 	e.ServeHTTP(rec, req)
 
-	assert.Equal(t, http.StatusNoContent, rec.Code)
+	assert.Equal(t, http.StatusNotFound, rec.Code)
 }
 
 func TestGetCategoryByIDInvalid(t *testing.T) {
@@ -180,7 +180,7 @@ func TestUpdateCategoryNotFound(t *testing.T) {
 
 	e.ServeHTTP(rec, req)
 
-	assert.Equal(t, http.StatusInternalServerError, rec.Code)
+	assert.Equal(t, http.StatusNotFound, rec.Code)
 }
 
 func TestUpdateCategoryInvalidID(t *testing.T) {
@@ -227,7 +227,7 @@ func TestDeleteCategoryNotFound(t *testing.T) {
 
 	e.ServeHTTP(rec, req)
 
-	assert.Equal(t, http.StatusInternalServerError, rec.Code)
+	assert.Equal(t, http.StatusNotFound, rec.Code)
 }
 
 func TestDeleteCategoryInvalidID(t *testing.T) {
