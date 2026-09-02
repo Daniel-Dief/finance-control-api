@@ -2,6 +2,7 @@ package main
 
 import (
 	"finance-control-api/database"
+	_ "finance-control-api/docs"
 	"finance-control-api/routes"
 	"log"
 
@@ -9,6 +10,11 @@ import (
 	"github.com/labstack/echo/v5"
 )
 
+// @title Finance Control API
+// @version 1.0
+// @description API para gerenciamento financeiro pessoal — áreas, categorias, orçamentos e transações.
+// @host localhost:1323
+// @BasePath /
 func main() {
 	err := godotenv.Load("../.env")
 	if err != nil {

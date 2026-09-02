@@ -1,8 +1,13 @@
 package routes
 
-import "github.com/labstack/echo/v5"
+import (
+	"github.com/labstack/echo/v5"
+	echoSwagger "github.com/swaggo/echo-swagger/v2"
+)
 
 func BindRoutes(echoAPI *echo.Echo) {
+	echoAPI.GET("/swagger/*", echoSwagger.WrapHandler)
+
 	areaGroup := echoAPI.Group("/areas")
 	budgetGroup := echoAPI.Group("/budgets")
 	categoryGroup := echoAPI.Group("/categories")

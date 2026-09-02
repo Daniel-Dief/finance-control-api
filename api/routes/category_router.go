@@ -19,7 +19,18 @@ type CategoryBody struct {
 	Name string `json:"name" validate:"required"`
 }
 
-// ListCategories defines the route for listing categories.
+// ListCategories godoc
+//
+//	@Summary		Listar categorias
+//	@Description	Retorna a lista de categorias cadastradas, com filtro opcional por nome.
+//	@Tags			categories
+//	@Accept			json
+//	@Produce		json
+//	@Param			name	query		string	false	"Filtro por nome da categoria"
+//	@Success		200		{array}		models.Category
+//	@Success		204		{object}	map[string]string
+//	@Failure		500		{object}	map[string]string
+//	@Router			/categories/list [get]
 func ListCategories(categoryGroup *echo.Group) {
 	categoryGroup.GET("/list", func(c *echo.Context) error {
 		var params CategoryQueryParams
@@ -40,7 +51,19 @@ func ListCategories(categoryGroup *echo.Group) {
 	})
 }
 
-// GetCategoryByID defines the route for retrieving a category by its ID.
+// GetCategoryByID godoc
+//
+//	@Summary		Obter categoria por ID
+//	@Description	Retorna os dados de uma categoria a partir do seu identificador.
+//	@Tags			categories
+//	@Accept			json
+//	@Produce		json
+//	@Param			id	path		int	true	"ID da categoria"
+//	@Success		200	{object}	models.Category
+//	@Failure		400	{object}	map[string]string
+//	@Failure		404	{object}	map[string]string
+//	@Failure		500	{object}	map[string]string
+//	@Router			/categories/{id} [get]
 func GetCategoryByID(categoryGroup *echo.Group) {
 	categoryGroup.GET("/:id", func(c *echo.Context) error {
 		var params PathIDParams
@@ -61,7 +84,18 @@ func GetCategoryByID(categoryGroup *echo.Group) {
 	})
 }
 
-// CreateCategory defines the route for creating a new category.
+// CreateCategory godoc
+//
+//	@Summary		Criar categoria
+//	@Description	Cria uma nova categoria a partir do nome informado no corpo da requisição.
+//	@Tags			categories
+//	@Accept			json
+//	@Produce		json
+//	@Param			body	body		CategoryBody	true	"Dados da nova categoria"
+//	@Success		201		{object}	models.Category
+//	@Failure		400		{object}		map[string]interface{}
+//	@Failure		500		{object}		map[string]string
+//	@Router			/categories/create [post]
 func CreateCategory(categoryGroup *echo.Group) {
 	categoryGroup.POST("/create", func(c *echo.Context) error {
 		var body CategoryBody
@@ -80,7 +114,20 @@ func CreateCategory(categoryGroup *echo.Group) {
 	})
 }
 
-// UpdateCategory defines the route for updating an existing category.
+// UpdateCategory godoc
+//
+//	@Summary		Atualizar categoria
+//	@Description	Atualiza o nome de uma categoria existente identificada pelo ID.
+//	@Tags			categories
+//	@Accept			json
+//	@Produce		json
+//	@Param			id		path		int				true	"ID da categoria"
+//	@Param			body	body		CategoryBody	true	"Novos dados da categoria"
+//	@Success		200		{object}	models.Category
+//	@Failure		400		{object}	map[string]interface{}
+//	@Failure		404		{object}	map[string]string
+//	@Failure		500		{object}	map[string]string
+//	@Router			/categories/{id} [put]
 func UpdateCategory(categoryGroup *echo.Group) {
 	categoryGroup.PUT("/:id", func(c *echo.Context) error {
 		var params PathIDParams
@@ -107,7 +154,19 @@ func UpdateCategory(categoryGroup *echo.Group) {
 	})
 }
 
-// DeleteCategory defines the route for deleting a category by its ID.
+// DeleteCategory godoc
+//
+//	@Summary		Excluir categoria
+//	@Description	Remove uma categoria a partir do seu identificador.
+//	@Tags			categories
+//	@Accept			json
+//	@Produce		json
+//	@Param			id	path		int	true	"ID da categoria"
+//	@Success		200	{object}	map[string]string
+//	@Failure		400	{object}	map[string]string
+//	@Failure		404	{object}	map[string]string
+//	@Failure		500		{object}	map[string]string
+//	@Router			/categories/{id} [delete]
 func DeleteCategory(categoryGroup *echo.Group) {
 	categoryGroup.DELETE("/:id", func(c *echo.Context) error {
 		var params PathIDParams

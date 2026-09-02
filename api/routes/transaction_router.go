@@ -37,7 +37,22 @@ type TransactionUpdateBody struct {
 	Type       *string `json:"type" validate:"omitempty,oneof=income expense"`
 }
 
-// ListTransactions defines the route for listing transactions.
+// ListTransactions godoc
+//
+//	@Summary		Listar transações
+//	@Description	Retorna a lista de transações, com filtros opcionais por tipo, categoria, área e período.
+//	@Tags			transactions
+//	@Accept			json
+//	@Produce		json
+//	@Param			type			query		string	false	"Filtro por tipo (income ou expense)"	Enums(income, expense)
+//	@Param			category_id		query		int		false	"Filtro por ID da categoria"
+//	@Param			area_id			query		int		false	"Filtro por ID da área"
+//	@Param			from			query		string	false	"Data inicial (AAAA-MM-DD)"				Format(2006-01-02)
+//	@Param			to				query		string	false	"Data final (AAAA-MM-DD)"					Format(2006-01-02)
+//	@Success		200				{array}		models.Transaction
+//	@Success		204				{object}	map[string]string
+//	@Failure		500				{object}	map[string]string
+//	@Router			/transactions/list [get]
 func ListTransactions(transactionGroup *echo.Group) {
 	transactionGroup.GET("/list", func(c *echo.Context) error {
 		var params TransactionQueryParams
@@ -66,7 +81,19 @@ func ListTransactions(transactionGroup *echo.Group) {
 	})
 }
 
-// GetTransactionByID defines the route for retrieving a transaction by its ID.
+// GetTransactionByID godoc
+//
+//	@Summary		Obter transação por ID
+//	@Description	Retorna os dados de uma transação a partir do seu identificador.
+//	@Tags			transactions
+//	@Accept			json
+//	@Produce		json
+//	@Param			id	path		int	true	"ID da transação"
+//	@Success		200	{object}	models.Transaction
+//	@Failure		400	{object}	map[string]string
+//	@Failure		404	{object}	map[string]string
+//	@Failure		500	{object}	map[string]string
+//	@Router			/transactions/{id} [get]
 func GetTransactionByID(transactionGroup *echo.Group) {
 	transactionGroup.GET("/:id", func(c *echo.Context) error {
 		var params PathIDParams
@@ -87,7 +114,18 @@ func GetTransactionByID(transactionGroup *echo.Group) {
 	})
 }
 
-// CreateTransaction defines the route for creating a new transaction.
+// CreateTransaction godoc
+//
+//	@Summary		Criar transação
+//	@Description	Cria uma nova transação (receita ou despesa) a partir dos dados informados.
+//	@Tags			transactions
+//	@Accept			json
+//	@Produce		json
+//	@Param			body	body		TransactionBody	true	"Dados da nova transação"
+//	@Success		201		{object}	models.Transaction
+//	@Failure		400		{object}		map[string]interface{}
+//	@Failure		500		{object}		map[string]string
+//	@Router			/transactions/create [post]
 func CreateTransaction(transactionGroup *echo.Group) {
 	transactionGroup.POST("/create", func(c *echo.Context) error {
 		var body TransactionBody
@@ -114,7 +152,20 @@ func CreateTransaction(transactionGroup *echo.Group) {
 	})
 }
 
-// UpdateTransaction defines the route for updating an existing transaction.
+// UpdateTransaction godoc
+//
+//	@Summary		Atualizar transação
+//	@Description	Atualiza os campos de uma transação existente. Apenas os campos informados serão alterados.
+//	@Tags			transactions
+//	@Accept			json
+//	@Produce		json
+//	@Param			id		path		int					true	"ID da transação"
+//	@Param			body	body		TransactionUpdateBody	true	"Campos a atualizar"
+//	@Success		200		{object}	models.Transaction
+//	@Failure		400		{object}	map[string]interface{}
+//	@Failure		404		{object}	map[string]string
+//	@Failure		500		{object}	map[string]string
+//	@Router			/transactions/{id} [put]
 func UpdateTransaction(transactionGroup *echo.Group) {
 	transactionGroup.PUT("/:id", func(c *echo.Context) error {
 		var params PathIDParams
@@ -149,7 +200,19 @@ func UpdateTransaction(transactionGroup *echo.Group) {
 	})
 }
 
-// DeleteTransaction defines the route for deleting a transaction by its ID.
+// DeleteTransaction godoc
+//
+//	@Summary		Excluir transação
+//	@Description	Remove uma transação a partir do seu identificador.
+//	@Tags			transactions
+//	@Accept			json
+//	@Produce		json
+//	@Param			id	path		int	true	"ID da transação"
+//	@Success		200	{object}	map[string]string
+//	@Failure		400	{object}	map[string]string
+//	@Failure		404	{object}	map[string]string
+//	@Failure		500	{object}	map[string]string
+//	@Router			/transactions/{id} [delete]
 func DeleteTransaction(transactionGroup *echo.Group) {
 	transactionGroup.DELETE("/:id", func(c *echo.Context) error {
 		var params PathIDParams

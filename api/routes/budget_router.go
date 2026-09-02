@@ -33,7 +33,20 @@ type BudgetUpdateBody struct {
 	Amount *int `json:"amount" validate:"omitempty"`
 }
 
-// ListBudgets defines the route for listing budgets.
+// ListBudgets godoc
+//
+//	@Summary		Listar orçamentos
+//	@Description	Retorna a lista de orçamentos, com filtros opcionais por ano, mês e área.
+//	@Tags			budgets
+//	@Accept			json
+//	@Produce		json
+//	@Param			year		query		int	false	"Filtro por ano"
+//	@Param			month		query		int	false	"Filtro por mês (1-12)"
+//	@Param			area_id		query		int	false	"Filtro por ID da área"
+//	@Success		200			{array}		models.Budget
+//	@Success		204			{object}	map[string]string
+//	@Failure		500			{object}	map[string]string
+//	@Router			/budgets/list [get]
 func ListBudgets(budgetGroup *echo.Group) {
 	budgetGroup.GET("/list", func(c *echo.Context) error {
 		var params BudgetQueryParams
@@ -60,7 +73,19 @@ func ListBudgets(budgetGroup *echo.Group) {
 	})
 }
 
-// GetBudgetByID defines the route for retrieving a budget by its ID.
+// GetBudgetByID godoc
+//
+//	@Summary		Obter orçamento por ID
+//	@Description	Retorna os dados de um orçamento a partir do seu identificador.
+//	@Tags			budgets
+//	@Accept			json
+//	@Produce		json
+//	@Param			id	path		int	true	"ID do orçamento"
+//	@Success		200	{object}	models.Budget
+//	@Failure		400	{object}	map[string]string
+//	@Failure		404	{object}	map[string]string
+//	@Failure		500	{object}	map[string]string
+//	@Router			/budgets/{id} [get]
 func GetBudgetByID(budgetGroup *echo.Group) {
 	budgetGroup.GET("/:id", func(c *echo.Context) error {
 		var params PathIDParams
@@ -81,7 +106,18 @@ func GetBudgetByID(budgetGroup *echo.Group) {
 	})
 }
 
-// CreateBudget defines the route for creating a new budget.
+// CreateBudget godoc
+//
+//	@Summary		Criar orçamento
+//	@Description	Cria um novo orçamento a partir dos dados informados no corpo da requisição.
+//	@Tags			budgets
+//	@Accept			json
+//	@Produce		json
+//	@Param			body	body		BudgetBody	true	"Dados do novo orçamento"
+//	@Success		201		{object}	models.Budget
+//	@Failure		400		{object}		map[string]interface{}
+//	@Failure		500		{object}		map[string]string
+//	@Router			/budgets/create [post]
 func CreateBudget(budgetGroup *echo.Group) {
 	budgetGroup.POST("/create", func(c *echo.Context) error {
 		var body BudgetBody
@@ -107,7 +143,20 @@ func CreateBudget(budgetGroup *echo.Group) {
 	})
 }
 
-// UpdateBudget defines the route for updating an existing budget.
+// UpdateBudget godoc
+//
+//	@Summary		Atualizar orçamento
+//	@Description	Atualiza os campos de um orçamento existente. Apenas os campos informados serão alterados.
+//	@Tags			budgets
+//	@Accept			json
+//	@Produce		json
+//	@Param			id		path		int				true	"ID do orçamento"
+//	@Param			body	body		BudgetUpdateBody	true	"Campos a atualizar"
+//	@Success		200		{object}	models.Budget
+//	@Failure		400		{object}	map[string]interface{}
+//	@Failure		404		{object}	map[string]string
+//	@Failure		500		{object}	map[string]string
+//	@Router			/budgets/{id} [put]
 func UpdateBudget(budgetGroup *echo.Group) {
 	budgetGroup.PUT("/:id", func(c *echo.Context) error {
 		var params PathIDParams
@@ -141,7 +190,19 @@ func UpdateBudget(budgetGroup *echo.Group) {
 	})
 }
 
-// DeleteBudget defines the route for deleting a budget by its ID.
+// DeleteBudget godoc
+//
+//	@Summary		Excluir orçamento
+//	@Description	Remove um orçamento a partir do seu identificador.
+//	@Tags			budgets
+//	@Accept			json
+//	@Produce		json
+//	@Param			id	path		int	true	"ID do orçamento"
+//	@Success		200	{object}	map[string]string
+//	@Failure		400	{object}	map[string]string
+//	@Failure		404	{object}	map[string]string
+//	@Failure		500	{object}	map[string]string
+//	@Router			/budgets/{id} [delete]
 func DeleteBudget(budgetGroup *echo.Group) {
 	budgetGroup.DELETE("/:id", func(c *echo.Context) error {
 		var params PathIDParams
