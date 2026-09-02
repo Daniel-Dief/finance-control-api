@@ -3,6 +3,7 @@ package helpers
 import (
 	"fmt"
 	"log"
+	"os"
 	"strings"
 
 	"github.com/spf13/viper"
@@ -19,13 +20,20 @@ type EnvConfig struct {
 	FrontendURL string `mapstructure:"FRONTEND_URL"`
 }
 
-// CheckEnvs loads configuration from the .env file and the system
-// environment using viper, then validates that all required variables
-// are defined correctly.
+// envOr returns the value of the environment variable named by key,
+// falling back to the viper config value if the env var is empty.
+func envOr(key, viperFallback string) string {
+	if v := os.Getenv(key); v != "" {
+		return v
+	}
+	return viperFallback
+}
+
+// CheckEnvs loads configuration from environment variables (primary) and
+// the .env file (fallback for local development), then validates that all
+// required variables are defined correctly.
 func CheckEnvs() error {
 	viper.SetConfigFile(".env")
-	viper.AutomaticEnv()
-
 	viper.SetDefault("DB_PORT", "5432")
 	viper.SetDefault("ENV", "development")
 
@@ -33,12 +41,17 @@ func CheckEnvs() error {
 		if _, ok := err.(viper.ConfigFileNotFoundError); !ok {
 			return fmt.Errorf("error loading .env file: %w", err)
 		}
-		log.Printf("No .env file found, using system environment variables.")
+		log.Println("No .env file found, using environment variables.")
 	}
 
-	var config EnvConfig
-	if err := viper.Unmarshal(&config); err != nil {
-		return fmt.Errorf("error unmarshalling environment variables: %w", err)
+	config := EnvConfig{
+		DBHost:      envOr("DB_HOST", viper.GetString("DB_HOST")),
+		DBPort:      envOr("DB_PORT", viper.GetString("DB_PORT")),
+		DBUser:      envOr("DB_USER", viper.GetString("DB_USER")),
+		DBPassword:  envOr("DB_PASSWORD", viper.GetString("DB_PASSWORD")),
+		DBName:      envOr("DB_NAME", viper.GetString("DB_NAME")),
+		ENV:         envOr("ENV", viper.GetString("ENV")),
+		FrontendURL: envOr("FRONTEND_URL", viper.GetString("FRONTEND_URL")),
 	}
 
 	return validate(&config)

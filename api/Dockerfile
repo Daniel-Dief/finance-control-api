@@ -14,7 +14,6 @@ FROM gcr.io/distroless/static-debian12:nonroot
 WORKDIR /app
 
 COPY --from=builder /app/finance-control-api .
-COPY .env .env
 
 EXPOSE 1323
 
