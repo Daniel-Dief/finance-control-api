@@ -28,10 +28,10 @@ func ListBudgets(props BudgetProps) ([]models.Budget, error) {
 	rows, err := Pool.QueryContext(context.Background(), query, props.Year, props.Month, props.AreaId)
 	if err != nil {
 		log.Println("Error executing query:", err)
-		return nil, errors.New("Falha ao consultar o banco de dados, em caso de persistencia contatar o suporte.")
+		return nil, ErrGenericDatabase
 	} else if rows.Err() != nil {
 		log.Println("Error with rows:", rows.Err())
-		return nil, errors.New("Falha ao processar os resultados da consulta, em caso de persistencia contatar o suporte.")
+		return nil, ErrProcessQuery
 	}
 	defer rows.Close()
 
@@ -40,7 +40,7 @@ func ListBudgets(props BudgetProps) ([]models.Budget, error) {
 		var b models.Budget
 		if err := rows.Scan(&b.ID, &b.Year, &b.Month, &b.AreaID, &b.Amount); err != nil {
 			log.Println("Error scanning row:", err)
-			return nil, errors.New("Falha indexar os resultados, em caso de persistencia contatar o suporte.")
+			return nil, ErrBindQuery
 		}
 		result = append(result, b)
 	}
@@ -60,7 +60,7 @@ func GetBudgetByID(id int) (models.Budget, error) {
 	err := Pool.QueryRowContext(context.Background(), query, id).Scan(&b.ID, &b.Year, &b.Month, &b.AreaID, &b.Amount)
 
 	if errors.Is(err, sql.ErrNoRows) {
-		return models.Budget{}, nil
+		return models.Budget{}, ErrNotFound
 	} else if err != nil {
 		log.Println("Error executing query:", err)
 		return models.Budget{}, errors.New("Falha ao consultar o banco de dados, em caso de persistencia contatar o suporte.")
@@ -81,7 +81,7 @@ func CreateBudget(budget BudgetProps) (models.Budget, error) {
 	err := Pool.QueryRowContext(context.Background(), query, budget.Year, budget.Month, budget.AreaId, budget.Amount).Scan(&b.ID, &b.Year, &b.Month, &b.AreaID, &b.Amount)
 	if err != nil {
 		log.Println("Error executing query:", err)
-		return models.Budget{}, errors.New("Falha ao registrar o orçamento no banco de dados, em caso de persistencia contatar o suporte.")
+		return models.Budget{}, ErrRegisterObject("orçamento")
 	}
 
 	return b, nil
@@ -103,10 +103,10 @@ func UpdateBudget(id int, budget BudgetProps) (models.Budget, error) {
 	err := Pool.QueryRowContext(context.Background(), query, budget.Year, budget.Month, budget.AreaId, budget.Amount, id).Scan(&b.ID, &b.Year, &b.Month, &b.AreaID, &b.Amount)
 
 	if errors.Is(err, sql.ErrNoRows) {
-		return models.Budget{}, errors.New("Falha ao atualizar o orçamento: orçamento não encontrado")
+		return models.Budget{}, ErrNotFound
 	} else if err != nil {
 		log.Println("Error executing query:", err)
-		return models.Budget{}, errors.New("Falha ao atualizar o orçamento no banco de dados, em caso de persistencia contatar o suporte.")
+		return models.Budget{}, ErrUpdateObject("orçamento")
 	}
 
 	return b, nil
@@ -122,17 +122,17 @@ func DeleteBudget(id int) error {
 	res, err := Pool.ExecContext(context.Background(), query, id)
 	if err != nil {
 		log.Println("Error executing query:", err)
-		return errors.New("Falha ao deletar o orçamento no banco de dados, em caso de persistencia contatar o suporte.")
+		return ErrDeleteObject("orçamento")
 	}
 
 	rowsAffected, err := res.RowsAffected()
 	if err != nil {
 		log.Println("Error executing query:", err)
-		return errors.New("Falha ao deletar o orçamento no banco de dados, em caso de persistencia contatar o suporte.")
+		return ErrDeleteObject("orçamento")
 	}
 
 	if rowsAffected == 0 {
-		return errors.New("Orcamento não encontrado")
+		return ErrNotFound
 	}
 
 	return nil

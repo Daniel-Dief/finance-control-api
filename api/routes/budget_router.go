@@ -1,6 +1,7 @@
 package routes
 
 import (
+	"errors"
 	"finance-control-api/database"
 	"net/http"
 
@@ -69,11 +70,11 @@ func GetBudgetByID(budgetGroup *echo.Group) {
 
 		budget, err := database.GetBudgetByID(params.ID)
 
+		if errors.Is(err, database.ErrNotFound) {
+			return c.JSON(http.StatusNotFound, map[string]interface{}{"error": "Orçamento não encontrado"})
+		}
 		if err != nil {
 			return c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
-		}
-		if budget.ID == 0 {
-			return c.JSON(http.StatusNoContent, map[string]interface{}{"info": "Orçamento não encontrado"})
 		}
 
 		return c.JSON(http.StatusOK, budget)
@@ -129,6 +130,9 @@ func UpdateBudget(budgetGroup *echo.Group) {
 
 		updatedBudget, err := database.UpdateBudget(params.ID, props)
 
+		if errors.Is(err, database.ErrNotFound) {
+			return c.JSON(http.StatusNotFound, map[string]interface{}{"error": "Orçamento não encontrado"})
+		}
 		if err != nil {
 			return c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
 		}
@@ -146,6 +150,9 @@ func DeleteBudget(budgetGroup *echo.Group) {
 		}
 
 		err := database.DeleteBudget(params.ID)
+		if errors.Is(err, database.ErrNotFound) {
+			return c.JSON(http.StatusNotFound, map[string]interface{}{"error": "Orçamento não encontrado"})
+		}
 		if err != nil {
 			return c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
 		}

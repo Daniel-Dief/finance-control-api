@@ -1,6 +1,7 @@
 package routes
 
 import (
+	"errors"
 	"finance-control-api/database"
 	"net/http"
 
@@ -75,11 +76,11 @@ func GetTransactionByID(transactionGroup *echo.Group) {
 
 		transaction, err := database.GetTransactionByID(params.ID)
 
+		if errors.Is(err, database.ErrNotFound) {
+			return c.JSON(http.StatusNotFound, map[string]interface{}{"error": "Transação não encontrada"})
+		}
 		if err != nil {
 			return c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
-		}
-		if transaction.ID == 0 {
-			return c.JSON(http.StatusNoContent, map[string]interface{}{"info": "Transação não encontrada"})
 		}
 
 		return c.JSON(http.StatusOK, transaction)
@@ -137,6 +138,9 @@ func UpdateTransaction(transactionGroup *echo.Group) {
 
 		updatedTransaction, err := database.UpdateTransaction(params.ID, props)
 
+		if errors.Is(err, database.ErrNotFound) {
+			return c.JSON(http.StatusNotFound, map[string]interface{}{"error": "Transação não encontrada"})
+		}
 		if err != nil {
 			return c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
 		}
@@ -154,6 +158,9 @@ func DeleteTransaction(transactionGroup *echo.Group) {
 		}
 
 		err := database.DeleteTransaction(params.ID)
+		if errors.Is(err, database.ErrNotFound) {
+			return c.JSON(http.StatusNotFound, map[string]interface{}{"error": "Transação não encontrada"})
+		}
 		if err != nil {
 			return c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
 		}

@@ -20,10 +20,10 @@ func ListAreas(name string) ([]models.Area, error) {
 	rows, err := Pool.QueryContext(context.Background(), query, name)
 	if err != nil {
 		log.Println("Error executing query:", err)
-		return nil, errors.New("Falha ao consultar o banco de dados, em caso de persistencia contatar o suporte.")
+		return nil, ErrGenericDatabase
 	} else if rows.Err() != nil {
 		log.Println("Error with rows:", rows.Err())
-		return nil, errors.New("Falha ao processar os resultados da consulta, em caso de persistencia contatar o suporte.")
+		return nil, ErrProcessQuery
 	}
 	defer rows.Close()
 
@@ -32,7 +32,7 @@ func ListAreas(name string) ([]models.Area, error) {
 		var a models.Area
 		if err := rows.Scan(&a.ID, &a.Name); err != nil {
 			log.Println("Error scanning row:", err)
-			return nil, errors.New("Falha indexar os resultados, em caso de persistencia contatar o suporte.")
+			return nil, ErrBindQuery
 		}
 		result = append(result, a)
 	}
@@ -52,7 +52,7 @@ func GetAreaByID(id int) (models.Area, error) {
 	err := Pool.QueryRowContext(context.Background(), query, id).Scan(&a.ID, &a.Name)
 
 	if errors.Is(err, sql.ErrNoRows) {
-		return models.Area{}, nil // Return an empty area if not found
+		return models.Area{}, ErrNotFound
 	} else if err != nil {
 		log.Println("Error executing query:", err)
 		return models.Area{}, errors.New("Falha ao consultar o banco de dados, em caso de persistencia contatar o suporte.")
@@ -73,7 +73,7 @@ func CreateArea(name string) (models.Area, error) {
 	err := Pool.QueryRowContext(context.Background(), query, name).Scan(&a.ID, &a.Name)
 	if err != nil {
 		log.Println("Error executing query:", err)
-		return models.Area{}, errors.New("Falha ao registrar a área no banco de dados, em caso de persistencia contatar o suporte.")
+		return models.Area{}, ErrRegisterObject("área")
 	}
 
 	return a, nil
@@ -92,10 +92,10 @@ func UpdateArea(id int, name string) (models.Area, error) {
 	err := Pool.QueryRowContext(context.Background(), query, id, name).Scan(&a.ID, &a.Name)
 
 	if errors.Is(err, sql.ErrNoRows) {
-		return models.Area{}, errors.New("Falha ao atualizar a área: área não encontrada")
+		return models.Area{}, ErrNotFound
 	} else if err != nil {
 		log.Println("Error executing query:", err)
-		return models.Area{}, errors.New("Falha ao atualizar a área no banco de dados, em caso de persistencia contatar o suporte.")
+		return models.Area{}, ErrUpdateObject("área")
 	}
 
 	return a, nil
@@ -111,17 +111,17 @@ func DeleteArea(id int) error {
 	res, err := Pool.ExecContext(context.Background(), query, id)
 	if err != nil {
 		log.Println("Error executing query:", err)
-		return errors.New("Falha ao deletar a área no banco de dados, em caso de persistencia contatar o suporte.")
+		return ErrDeleteObject("área")
 	}
 
 	rowsAffected, err := res.RowsAffected()
 	if err != nil {
 		log.Println("Error executing query:", err)
-		return errors.New("Falha ao deletar a área no banco de dados, em caso de persistencia contatar o suporte.")
+		return ErrDeleteObject("área")
 	}
 
 	if rowsAffected == 0 {
-		return errors.New("Area not found")
+		return ErrNotFound
 	}
 
 	return nil

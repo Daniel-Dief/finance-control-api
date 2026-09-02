@@ -1,6 +1,7 @@
 package routes
 
 import (
+	"errors"
 	"finance-control-api/database"
 	"net/http"
 
@@ -48,11 +49,11 @@ func GetAreaByID(areaGroup *echo.Group) {
 
 		area, err := database.GetAreaByID(params.ID)
 
+		if errors.Is(err, database.ErrNotFound) {
+			return c.JSON(http.StatusNotFound, map[string]interface{}{"error": "Área não encontrada"})
+		}
 		if err != nil {
 			return c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
-		}
-		if area.ID == 0 {
-			return c.JSON(http.StatusNoContent, map[string]interface{}{"info": "Área não encontrada"})
 		}
 
 		return c.JSON(http.StatusOK, area)
@@ -94,6 +95,9 @@ func UpdateArea(areaGroup *echo.Group) {
 
 		updatedArea, err := database.UpdateArea(params.ID, body.Name)
 
+		if errors.Is(err, database.ErrNotFound) {
+			return c.JSON(http.StatusNotFound, map[string]interface{}{"error": "Área não encontrada"})
+		}
 		if err != nil {
 			return c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
 		}
@@ -111,6 +115,9 @@ func DeleteArea(areaGroup *echo.Group) {
 		}
 
 		err := database.DeleteArea(params.ID)
+		if errors.Is(err, database.ErrNotFound) {
+			return c.JSON(http.StatusNotFound, map[string]interface{}{"error": "Área não encontrada"})
+		}
 		if err != nil {
 			return c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
 		}

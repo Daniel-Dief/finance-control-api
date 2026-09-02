@@ -1,6 +1,7 @@
 package routes
 
 import (
+	"errors"
 	"finance-control-api/database"
 	"net/http"
 
@@ -49,11 +50,11 @@ func GetCategoryByID(categoryGroup *echo.Group) {
 
 		category, err := database.GetCategoryByID(params.ID)
 
+		if errors.Is(err, database.ErrNotFound) {
+			return c.JSON(http.StatusNotFound, map[string]interface{}{"error": "Categoria não encontrada"})
+		}
 		if err != nil {
 			return c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
-		}
-		if category.ID == 0 {
-			return c.JSON(http.StatusNoContent, map[string]interface{}{"info": "Categoria não encontrada"})
 		}
 
 		return c.JSON(http.StatusOK, category)
@@ -95,6 +96,9 @@ func UpdateCategory(categoryGroup *echo.Group) {
 
 		updatedCategory, err := database.UpdateCategory(params.ID, body.Name)
 
+		if errors.Is(err, database.ErrNotFound) {
+			return c.JSON(http.StatusNotFound, map[string]interface{}{"error": "Categoria não encontrada"})
+		}
 		if err != nil {
 			return c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
 		}
@@ -112,6 +116,9 @@ func DeleteCategory(categoryGroup *echo.Group) {
 		}
 
 		err := database.DeleteCategory(params.ID)
+		if errors.Is(err, database.ErrNotFound) {
+			return c.JSON(http.StatusNotFound, map[string]interface{}{"error": "Categoria não encontrada"})
+		}
 		if err != nil {
 			return c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
 		}

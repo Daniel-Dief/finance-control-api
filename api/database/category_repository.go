@@ -20,10 +20,10 @@ func ListCategories(name *string) ([]models.Category, error) {
 	rows, err := Pool.QueryContext(context.Background(), query, name)
 	if err != nil {
 		log.Println("Error executing query:", err)
-		return nil, errors.New("Falha ao consultar o banco de dados, em caso de persistencia contatar o suporte.")
+		return nil, ErrGenericDatabase
 	} else if rows.Err() != nil {
 		log.Println("Error with rows:", rows.Err())
-		return nil, errors.New("Falha ao processar os resultados da consulta, em caso de persistencia contatar o suporte.")
+		return nil, ErrProcessQuery
 	}
 	defer rows.Close()
 
@@ -32,7 +32,7 @@ func ListCategories(name *string) ([]models.Category, error) {
 		var c models.Category
 		if err := rows.Scan(&c.ID, &c.Name); err != nil {
 			log.Println("Error scanning row:", err)
-			return nil, errors.New("Falha indexar os resultados, em caso de persistencia contatar o suporte.")
+			return nil, ErrBindQuery
 		}
 		result = append(result, c)
 	}
@@ -52,7 +52,7 @@ func GetCategoryByID(id int) (models.Category, error) {
 	err := Pool.QueryRowContext(context.Background(), query, id).Scan(&c.ID, &c.Name)
 
 	if errors.Is(err, sql.ErrNoRows) {
-		return models.Category{}, nil
+		return models.Category{}, ErrNotFound
 	} else if err != nil {
 		log.Println("Error executing query:", err)
 		return models.Category{}, errors.New("Falha ao consultar o banco de dados, em caso de persistencia contatar o suporte.")
@@ -73,7 +73,7 @@ func CreateCategory(name string) (models.Category, error) {
 	err := Pool.QueryRowContext(context.Background(), query, name).Scan(&c.ID, &c.Name)
 	if err != nil {
 		log.Println("Error executing query:", err)
-		return models.Category{}, errors.New("Falha ao registrar a categoria no banco de dados, em caso de persistencia contatar o suporte.")
+		return models.Category{}, ErrRegisterObject("categoria")
 	}
 
 	return c, nil
@@ -92,10 +92,10 @@ func UpdateCategory(id int, name string) (models.Category, error) {
 	err := Pool.QueryRowContext(context.Background(), query, id, name).Scan(&c.ID, &c.Name)
 
 	if errors.Is(err, sql.ErrNoRows) {
-		return models.Category{}, errors.New("Falha ao atualizar a categoria: categoria não encontrada")
+		return models.Category{}, ErrNotFound
 	} else if err != nil {
 		log.Println("Error executing query:", err)
-		return models.Category{}, errors.New("Falha ao atualizar a categoria no banco de dados, em caso de persistencia contatar o suporte.")
+		return models.Category{}, ErrUpdateObject("categoria")
 	}
 
 	return c, nil
@@ -111,17 +111,17 @@ func DeleteCategory(id int) error {
 	res, err := Pool.ExecContext(context.Background(), query, id)
 	if err != nil {
 		log.Println("Error executing query:", err)
-		return errors.New("Falha ao deletar a categoria no banco de dados, em caso de persistencia contatar o suporte.")
+		return ErrDeleteObject("categoria")
 	}
 
 	rowsAffected, err := res.RowsAffected()
 	if err != nil {
 		log.Println("Error executing query:", err)
-		return errors.New("Falha ao deletar a categoria no banco de dados, em caso de persistencia contatar o suporte.")
+		return ErrDeleteObject("categoria")
 	}
 
 	if rowsAffected == 0 {
-		return errors.New("Categoria não encontrada")
+		return ErrNotFound
 	}
 
 	return nil

@@ -39,10 +39,10 @@ func ListTransactions(filters TransactionFilters) ([]models.Transaction, error) 
 	rows, err := Pool.QueryContext(context.Background(), query, filters.Type, filters.CategoryID, filters.AreaID, filters.From, filters.To)
 	if err != nil {
 		log.Println("Error executing query:", err)
-		return nil, errors.New("Falha ao consultar o banco de dados, em caso de persistencia contatar o suporte.")
+		return nil, ErrGenericDatabase
 	} else if rows.Err() != nil {
 		log.Println("Error with rows:", rows.Err())
-		return nil, errors.New("Falha ao processar os resultados da consulta, em caso de persistencia contatar o suporte.")
+		return nil, ErrProcessQuery
 	}
 	defer rows.Close()
 
@@ -51,7 +51,7 @@ func ListTransactions(filters TransactionFilters) ([]models.Transaction, error) 
 		var t models.Transaction
 		if err := rows.Scan(&t.ID, &t.Date, &t.Amount, &t.CategoryID, &t.AreaID, &t.Type); err != nil {
 			log.Println("Error scanning row:", err)
-			return nil, errors.New("Falha indexar os resultados, em caso de persistencia contatar o suporte.")
+			return nil, ErrBindQuery
 		}
 		result = append(result, t)
 	}
@@ -71,7 +71,7 @@ func GetTransactionByID(id int) (models.Transaction, error) {
 	err := Pool.QueryRowContext(context.Background(), query, id).Scan(&t.ID, &t.Date, &t.Amount, &t.CategoryID, &t.AreaID, &t.Type)
 
 	if errors.Is(err, sql.ErrNoRows) {
-		return models.Transaction{}, nil
+		return models.Transaction{}, ErrNotFound
 	} else if err != nil {
 		log.Println("Error executing query:", err)
 		return models.Transaction{}, errors.New("Falha ao consultar o banco de dados, em caso de persistencia contatar o suporte.")
@@ -94,7 +94,7 @@ func CreateTransaction(props TransactionProps) (models.Transaction, error) {
 		Scan(&t.ID, &t.Date, &t.Amount, &t.CategoryID, &t.AreaID, &t.Type)
 	if err != nil {
 		log.Println("Error executing query:", err)
-		return models.Transaction{}, errors.New("Falha ao registrar a transação no banco de dados, em caso de persistencia contatar o suporte.")
+		return models.Transaction{}, ErrRegisterObject("transação")
 	}
 
 	return t, nil
@@ -118,10 +118,10 @@ func UpdateTransaction(id int, props TransactionProps) (models.Transaction, erro
 		Scan(&t.ID, &t.Date, &t.Amount, &t.CategoryID, &t.AreaID, &t.Type)
 
 	if errors.Is(err, sql.ErrNoRows) {
-		return models.Transaction{}, errors.New("Falha ao atualizar a transação: transação não encontrada")
+		return models.Transaction{}, ErrNotFound
 	} else if err != nil {
 		log.Println("Error executing query:", err)
-		return models.Transaction{}, errors.New("Falha ao atualizar a transação no banco de dados, em caso de persistencia contatar o suporte.")
+		return models.Transaction{}, ErrUpdateObject("transação")
 	}
 
 	return t, nil
@@ -137,17 +137,17 @@ func DeleteTransaction(id int) error {
 	res, err := Pool.ExecContext(context.Background(), query, id)
 	if err != nil {
 		log.Println("Error executing query:", err)
-		return errors.New("Falha ao deletar a transação no banco de dados, em caso de persistencia contatar o suporte.")
+		return ErrDeleteObject("transação")
 	}
 
 	rowsAffected, err := res.RowsAffected()
 	if err != nil {
 		log.Println("Error executing query:", err)
-		return errors.New("Falha ao deletar a transação no banco de dados, em caso de persistencia contatar o suporte.")
+		return ErrDeleteObject("transação")
 	}
 
 	if rowsAffected == 0 {
-		return errors.New("Transação não encontrada")
+		return ErrNotFound
 	}
 
 	return nil
