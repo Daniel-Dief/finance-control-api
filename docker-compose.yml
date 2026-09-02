@@ -11,3 +11,21 @@ services:
     volumes:
       - ./postgres:/docker-entrypoint-initdb.d
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  api:
+    container_name: finance-control-api
+    build:
+      context: .
+      dockerfile: api/Dockerfile
+    env_file: .env
+    ports:
+      - "1323:1323"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
