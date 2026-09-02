@@ -26,6 +26,13 @@ func StringConn() string {
 	return psqlInfo
 }
 
+// OpenExternal opens a connection to the given PostgreSQL URI without
+// assigning it to the global pool. It is used for ad-hoc operations such as
+// applying the schema to a freshly created test database.
+func OpenExternal(uri string) (*sql.DB, error) {
+	return sql.Open("postgres", uri)
+}
+
 // PingDatabase pings the database to check if the connection is successful.
 func PingDatabase() error {
 	if Pool == nil {
