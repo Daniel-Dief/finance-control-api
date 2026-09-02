@@ -21,13 +21,15 @@ func ListAreas(name string) ([]models.Area, error) {
 	if err != nil {
 		log.Println("Error executing query:", err)
 		return nil, ErrGenericDatabase
-	} else if rows.Err() != nil {
+	}
+
+	defer rows.Close()
+	if rows.Err() != nil {
 		log.Println("Error with rows:", rows.Err())
 		return nil, ErrProcessQuery
 	}
-	defer rows.Close()
 
-	var result []models.Area
+	result := make([]models.Area, 0)
 	for rows.Next() {
 		var a models.Area
 		if err := rows.Scan(&a.ID, &a.Name); err != nil {
@@ -55,7 +57,7 @@ func GetAreaByID(id int) (models.Area, error) {
 		return models.Area{}, ErrNotFound
 	} else if err != nil {
 		log.Println("Error executing query:", err)
-		return models.Area{}, errors.New("Falha ao consultar o banco de dados, em caso de persistencia contatar o suporte.")
+		return models.Area{}, ErrGenericDatabase
 	}
 
 	return a, nil

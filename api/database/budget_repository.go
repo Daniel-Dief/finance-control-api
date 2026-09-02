@@ -29,13 +29,15 @@ func ListBudgets(props BudgetProps) ([]models.Budget, error) {
 	if err != nil {
 		log.Println("Error executing query:", err)
 		return nil, ErrGenericDatabase
-	} else if rows.Err() != nil {
+	}
+
+	defer rows.Close()
+	if rows.Err() != nil {
 		log.Println("Error with rows:", rows.Err())
 		return nil, ErrProcessQuery
 	}
-	defer rows.Close()
 
-	var result []models.Budget
+	result := make([]models.Budget, 0)
 	for rows.Next() {
 		var b models.Budget
 		if err := rows.Scan(&b.ID, &b.Year, &b.Month, &b.AreaID, &b.Amount); err != nil {
@@ -63,7 +65,7 @@ func GetBudgetByID(id int) (models.Budget, error) {
 		return models.Budget{}, ErrNotFound
 	} else if err != nil {
 		log.Println("Error executing query:", err)
-		return models.Budget{}, errors.New("Falha ao consultar o banco de dados, em caso de persistencia contatar o suporte.")
+		return models.Budget{}, ErrGenericDatabase
 	}
 
 	return b, nil

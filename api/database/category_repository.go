@@ -21,13 +21,15 @@ func ListCategories(name *string) ([]models.Category, error) {
 	if err != nil {
 		log.Println("Error executing query:", err)
 		return nil, ErrGenericDatabase
-	} else if rows.Err() != nil {
+	}
+
+	defer rows.Close()
+	if rows.Err() != nil {
 		log.Println("Error with rows:", rows.Err())
 		return nil, ErrProcessQuery
 	}
-	defer rows.Close()
 
-	var result []models.Category
+	result := make([]models.Category, 0)
 	for rows.Next() {
 		var c models.Category
 		if err := rows.Scan(&c.ID, &c.Name); err != nil {
@@ -55,7 +57,7 @@ func GetCategoryByID(id int) (models.Category, error) {
 		return models.Category{}, ErrNotFound
 	} else if err != nil {
 		log.Println("Error executing query:", err)
-		return models.Category{}, errors.New("Falha ao consultar o banco de dados, em caso de persistencia contatar o suporte.")
+		return models.Category{}, ErrGenericDatabase
 	}
 
 	return c, nil

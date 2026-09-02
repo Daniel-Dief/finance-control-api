@@ -30,7 +30,7 @@ type BudgetUpdateBody struct {
 	Year   *int `json:"year" validate:"omitempty,min=1"`
 	Month  *int `json:"month" validate:"omitempty,min=1,max=12"`
 	AreaID *int `json:"area_id" validate:"omitempty,gt=0"`
-	Amount *int `json:"amount" validate:"omitempty"`
+	Amount *int `json:"amount" validate:"omitempty,gt=0"`
 }
 
 // ListBudgets godoc

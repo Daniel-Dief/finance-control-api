@@ -40,13 +40,15 @@ func ListTransactions(filters TransactionFilters) ([]models.Transaction, error) 
 	if err != nil {
 		log.Println("Error executing query:", err)
 		return nil, ErrGenericDatabase
-	} else if rows.Err() != nil {
+	}
+
+	defer rows.Close()
+	if rows.Err() != nil {
 		log.Println("Error with rows:", rows.Err())
 		return nil, ErrProcessQuery
 	}
-	defer rows.Close()
 
-	var result []models.Transaction
+	result := make([]models.Transaction, 0)
 	for rows.Next() {
 		var t models.Transaction
 		if err := rows.Scan(&t.ID, &t.Date, &t.Amount, &t.CategoryID, &t.AreaID, &t.Type); err != nil {
@@ -74,7 +76,7 @@ func GetTransactionByID(id int) (models.Transaction, error) {
 		return models.Transaction{}, ErrNotFound
 	} else if err != nil {
 		log.Println("Error executing query:", err)
-		return models.Transaction{}, errors.New("Falha ao consultar o banco de dados, em caso de persistencia contatar o suporte.")
+		return models.Transaction{}, ErrGenericDatabase
 	}
 
 	return t, nil

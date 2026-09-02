@@ -3,6 +3,7 @@ package main
 import (
 	"finance-control-api/database"
 	_ "finance-control-api/docs"
+	"finance-control-api/middlewares"
 	"finance-control-api/routes"
 	"log"
 
@@ -36,6 +37,7 @@ func main() {
 
 	echoAPI := echo.New()
 
+	middlewares.BindMiddlewares(echoAPI)
 	routes.BindRoutes(echoAPI)
 
 	if err := echoAPI.Start(":1323"); err != nil {
