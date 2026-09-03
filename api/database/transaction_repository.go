@@ -28,7 +28,8 @@ type TransactionFilters struct {
 // based on the provided filters.
 func ListTransactions(filters TransactionFilters, pag Pagination) (*PaginatedResult[models.Transaction], error) {
 	where := `
-		WHERE ($1::text IS NULL OR "Type" = $1)
+		WHERE "StatusId" = 1
+		AND ($1::text IS NULL OR "Type" = $1)
 		AND ($2::integer IS NULL OR "CategoryId" = $2)
 		AND ($3::integer IS NULL OR "AreaId" = $3)
 		AND ($4::date IS NULL OR "Date" >= $4)
@@ -83,7 +84,7 @@ func GetTransactionByID(id int) (models.Transaction, error) {
 	query := `
 		SELECT "Id", "Date", "Amount", "CategoryId", "AreaId", "Type"
 		FROM "Transactions"
-		WHERE "Id" = $1
+		WHERE "Id" = $1 AND "StatusId" = 1
 	`
 
 	var t models.Transaction
@@ -128,7 +129,7 @@ func UpdateTransaction(id int, props TransactionProps) (models.Transaction, erro
 			"CategoryId" = COALESCE($3, "CategoryId"),
 			"AreaId" = COALESCE($4, "AreaId"),
 			"Type" = COALESCE($5, "Type")
-		WHERE "Id" = $6
+		WHERE "Id" = $6 AND "StatusId" = 1
 		RETURNING "Id", "Date", "Amount", "CategoryId", "AreaId", "Type"
 	`
 
@@ -146,11 +147,12 @@ func UpdateTransaction(id int, props TransactionProps) (models.Transaction, erro
 	return t, nil
 }
 
-// DeleteTransaction removes a transaction from the database based on its ID.
+// DeleteTransaction soft-deletes a transaction by setting its StatusId to 3 (deleted).
 func DeleteTransaction(id int) error {
 	query := `
-		DELETE FROM "Transactions"
-		WHERE "Id" = $1
+		UPDATE "Transactions"
+		SET "StatusId" = 3
+		WHERE "Id" = $1 AND "StatusId" = 1
 	`
 
 	res, err := Pool.ExecContext(context.Background(), query, id)

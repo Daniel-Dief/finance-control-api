@@ -12,7 +12,8 @@ import (
 // filtered by name. If name is empty, all areas are returned.
 func ListAreas(name string, pag Pagination) (*PaginatedResult[models.Area], error) {
 	where := `
-		WHERE ($1::text IS NULL OR "Name" ILIKE '%' || $1 || '%')
+		WHERE "StatusId" = 1
+		AND ($1::text IS NULL OR "Name" ILIKE '%' || $1 || '%')
 	`
 
 	var total int
@@ -61,7 +62,7 @@ func GetAreaByID(id int) (models.Area, error) {
 	query := `
 		SELECT "Id", "Name"
 		FROM "Areas"
-		WHERE "Id" = $1
+		WHERE "Id" = $1 AND "StatusId" = 1
 	`
 
 	var a models.Area
@@ -100,7 +101,7 @@ func UpdateArea(id int, name string) (models.Area, error) {
 	query := `
 		UPDATE "Areas"
 		SET "Name" = $2
-		WHERE "Id" = $1
+		WHERE "Id" = $1 AND "StatusId" = 1
 		RETURNING "Id", "Name"
 	`
 
@@ -117,11 +118,12 @@ func UpdateArea(id int, name string) (models.Area, error) {
 	return a, nil
 }
 
-// DeleteArea deletes an area from the database by its ID.
+// DeleteArea soft-deletes an area by setting its StatusId to 3 (deleted).
 func DeleteArea(id int) error {
 	query := `
-		DELETE FROM "Areas"
-		WHERE "Id" = $1
+		UPDATE "Areas"
+		SET "StatusId" = 3
+		WHERE "Id" = $1 AND "StatusId" = 1
 	`
 
 	res, err := Pool.ExecContext(context.Background(), query, id)

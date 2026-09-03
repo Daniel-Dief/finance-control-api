@@ -1,9 +1,27 @@
 -- =========================
+-- Table: Status
+-- =========================
+CREATE TABLE "Status" (
+    "Id" SERIAL PRIMARY KEY,
+    "Name" TEXT NOT NULL UNIQUE,
+    "CreatedAt" TIMESTAMPTZ NOT NULL DEFAULT now(),
+    "UpdatedAt" TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+INSERT INTO "Status" ("Name") VALUES ('active'), ('inactive'), ('deleted');
+
+-- =========================
 -- Table: Categories
 -- =========================
 CREATE TABLE "Categories" (
     "Id" SERIAL PRIMARY KEY,
-    "Name" TEXT NOT NULL UNIQUE
+    "Name" TEXT NOT NULL UNIQUE,
+    "CreatedAt" TIMESTAMPTZ NOT NULL DEFAULT now(),
+    "UpdatedAt" TIMESTAMPTZ NOT NULL DEFAULT now(),
+    "StatusId" INTEGER NOT NULL DEFAULT 1,
+    CONSTRAINT fk_categories_status
+        FOREIGN KEY ("StatusId")
+        REFERENCES "Status"("Id")
 );
 
 -- =========================
@@ -11,7 +29,13 @@ CREATE TABLE "Categories" (
 -- =========================
 CREATE TABLE "Areas" (
     "Id" SERIAL PRIMARY KEY,
-    "Name" TEXT NOT NULL UNIQUE
+    "Name" TEXT NOT NULL UNIQUE,
+    "CreatedAt" TIMESTAMPTZ NOT NULL DEFAULT now(),
+    "UpdatedAt" TIMESTAMPTZ NOT NULL DEFAULT now(),
+    "StatusId" INTEGER NOT NULL DEFAULT 1,
+    CONSTRAINT fk_areas_status
+        FOREIGN KEY ("StatusId")
+        REFERENCES "Status"("Id")
 );
 
 -- =========================
@@ -23,11 +47,18 @@ CREATE TABLE "MonthlyBudget" (
     "Month" INTEGER NOT NULL CHECK ("Month" BETWEEN 1 AND 12),
     "AreaId" INTEGER NOT NULL,
     "Amount" INTEGER NOT NULL CHECK ("Amount" >= 0),
+    "CreatedAt" TIMESTAMPTZ NOT NULL DEFAULT now(),
+    "UpdatedAt" TIMESTAMPTZ NOT NULL DEFAULT now(),
+    "StatusId" INTEGER NOT NULL DEFAULT 1,
 
     CONSTRAINT fk_area
         FOREIGN KEY ("AreaId")
         REFERENCES "Areas"("Id")
         ON DELETE CASCADE,
+
+    CONSTRAINT fk_budget_status
+        FOREIGN KEY ("StatusId")
+        REFERENCES "Status"("Id"),
 
     CONSTRAINT uq_budget UNIQUE ("Year", "Month", "AreaId")
 );
@@ -42,6 +73,9 @@ CREATE TABLE "Transactions" (
     "CategoryId" INTEGER,
     "AreaId" INTEGER NOT NULL,
     "Type" TEXT NOT NULL CHECK ("Type" IN ('income', 'expense')),
+    "CreatedAt" TIMESTAMPTZ NOT NULL DEFAULT now(),
+    "UpdatedAt" TIMESTAMPTZ NOT NULL DEFAULT now(),
+    "StatusId" INTEGER NOT NULL DEFAULT 1,
 
     CONSTRAINT fk_category
         FOREIGN KEY ("CategoryId")
@@ -51,7 +85,11 @@ CREATE TABLE "Transactions" (
     CONSTRAINT fk_area_tx
         FOREIGN KEY ("AreaId")
         REFERENCES "Areas"("Id")
-        ON DELETE CASCADE
+        ON DELETE CASCADE,
+
+    CONSTRAINT fk_tx_status
+        FOREIGN KEY ("StatusId")
+        REFERENCES "Status"("Id")
 );
 
 -- =========================

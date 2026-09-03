@@ -12,7 +12,8 @@ import (
 // optionally filtered by name. If name is empty, all categories are returned.
 func ListCategories(name *string, pag Pagination) (*PaginatedResult[models.Category], error) {
 	where := `
-		WHERE ($1::text IS NULL OR "Name" ILIKE '%' || $1 || '%')
+		WHERE "StatusId" = 1
+		AND ($1::text IS NULL OR "Name" ILIKE '%' || $1 || '%')
 	`
 
 	var total int
@@ -61,7 +62,7 @@ func GetCategoryByID(id int) (models.Category, error) {
 	query := `
 		SELECT "Id", "Name"
 		FROM "Categories"
-		WHERE "Id" = $1
+		WHERE "Id" = $1 AND "StatusId" = 1
 	`
 
 	var c models.Category
@@ -100,7 +101,7 @@ func UpdateCategory(id int, name string) (models.Category, error) {
 	query := `
 		UPDATE "Categories"
 		SET "Name" = $2
-		WHERE "Id" = $1
+		WHERE "Id" = $1 AND "StatusId" = 1
 		RETURNING "Id", "Name"
 	`
 
@@ -117,11 +118,12 @@ func UpdateCategory(id int, name string) (models.Category, error) {
 	return c, nil
 }
 
-// DeleteCategory removes a category from the database by its ID.
+// DeleteCategory soft-deletes a category by setting its StatusId to 3 (deleted).
 func DeleteCategory(id int) error {
 	query := `
-		DELETE FROM "Categories"
-		WHERE "Id" = $1
+		UPDATE "Categories"
+		SET "StatusId" = 3
+		WHERE "Id" = $1 AND "StatusId" = 1
 	`
 
 	res, err := Pool.ExecContext(context.Background(), query, id)

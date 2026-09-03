@@ -19,7 +19,8 @@ type BudgetProps struct {
 // month and/or areaId.
 func ListBudgets(props BudgetProps, pag Pagination) (*PaginatedResult[models.Budget], error) {
 	where := `
-		WHERE ($1::integer IS NULL OR "Year" = $1)
+		WHERE "StatusId" = 1
+		AND ($1::integer IS NULL OR "Year" = $1)
 		AND ($2::integer IS NULL OR "Month" = $2)
 		AND ($3::integer IS NULL OR "AreaId" = $3)
 	`
@@ -70,7 +71,7 @@ func GetBudgetByID(id int) (models.Budget, error) {
 	query := `
 		SELECT "Id", "Year", "Month", "AreaId", "Amount"
 		FROM "MonthlyBudget"
-		WHERE "Id" = $1
+		WHERE "Id" = $1 AND "StatusId" = 1
 	`
 
 	var b models.Budget
@@ -112,7 +113,7 @@ func UpdateBudget(id int, budget BudgetProps) (models.Budget, error) {
 			"Month" = COALESCE($2, "Month"),
 			"AreaId" = COALESCE($3, "AreaId"),
 			"Amount" = COALESCE($4, "Amount")
-		WHERE "Id" = $5
+		WHERE "Id" = $5 AND "StatusId" = 1
 		RETURNING "Id", "Year", "Month", "AreaId", "Amount"
 	`
 
@@ -129,11 +130,12 @@ func UpdateBudget(id int, budget BudgetProps) (models.Budget, error) {
 	return b, nil
 }
 
-// DeleteBudget deletes a budget from the database by its ID.
+// DeleteBudget soft-deletes a budget by setting its StatusId to 3 (deleted).
 func DeleteBudget(id int) error {
 	query := `
-		DELETE FROM "MonthlyBudget"
-		WHERE "Id" = $1
+		UPDATE "MonthlyBudget"
+		SET "StatusId" = 3
+		WHERE "Id" = $1 AND "StatusId" = 1
 	`
 
 	res, err := Pool.ExecContext(context.Background(), query, id)
