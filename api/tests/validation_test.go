@@ -2,6 +2,7 @@ package tests
 
 import (
 	"finance-control-api/database"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -84,12 +85,12 @@ func TestZeroID(t *testing.T) {
 func TestBudgetInvalidMonth(t *testing.T) {
 	e := setupEcho()
 
-	area, err := createTestArea("Validation Test Area")
+	area, err := createTestArea("Validation Test Area Invalid Month")
 	if err != nil {
 		t.Fatalf("Failed to create test area: %v", err)
 	}
 
-	body := `{"year":2024,"month":13,"area_id":1,"amount":1000}`
+	body := fmt.Sprintf(`{"year":2024,"month":13,"area_id":%d,"amount":1000}`, area.ID)
 	req := httptest.NewRequest(http.MethodPost, "/budgets/create", strings.NewReader(body))
 	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	rec := httptest.NewRecorder()
@@ -104,12 +105,12 @@ func TestBudgetInvalidMonth(t *testing.T) {
 func TestBudgetInvalidYear(t *testing.T) {
 	e := setupEcho()
 
-	area, err := createTestArea("Validation Test Area")
+	area, err := createTestArea("Validation Test Area Invalid Year")
 	if err != nil {
 		t.Fatalf("Failed to create test area: %v", err)
 	}
 
-	body := `{"year":0,"month":1,"area_id":1,"amount":1000}`
+	body := fmt.Sprintf(`{"year":0,"month":1,"area_id":%d,"amount":1000}`, area.ID)
 	req := httptest.NewRequest(http.MethodPost, "/budgets/create", strings.NewReader(body))
 	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	rec := httptest.NewRecorder()
@@ -124,17 +125,17 @@ func TestBudgetInvalidYear(t *testing.T) {
 func TestTransactionInvalidType(t *testing.T) {
 	e := setupEcho()
 
-	area, err := createTestArea("Validation Test Area")
+	area, err := createTestArea("Validation Test Area Invalid Type")
 	if err != nil {
 		t.Fatalf("Failed to create test area: %v", err)
 	}
 
-	category, err := createTestCategory("Validation Test Category")
+	category, err := createTestCategory("Validation Test Category Invalid Type")
 	if err != nil {
 		t.Fatalf("Failed to create test category: %v", err)
 	}
 
-	body := `{"date":"2024-06-15","amount":100,"category_id":1,"area_id":1,"type":"invalid"}`
+	body := fmt.Sprintf(`{"date":"2024-06-15","amount":100,"category_id":%d,"area_id":%d,"type":"invalid"}`, category.ID, area.ID)
 	req := httptest.NewRequest(http.MethodPost, "/transactions/create", strings.NewReader(body))
 	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	rec := httptest.NewRecorder()
@@ -150,17 +151,17 @@ func TestTransactionInvalidType(t *testing.T) {
 func TestTransactionInvalidDateFormat(t *testing.T) {
 	e := setupEcho()
 
-	area, err := createTestArea("Validation Test Area")
+	area, err := createTestArea("Validation Test Area Invalid Date")
 	if err != nil {
 		t.Fatalf("Failed to create test area: %v", err)
 	}
 
-	category, err := createTestCategory("Validation Test Category")
+	category, err := createTestCategory("Validation Test Category Invalid Date")
 	if err != nil {
 		t.Fatalf("Failed to create test category: %v", err)
 	}
 
-	body := `{"date":"15-06-2024","amount":100,"category_id":1,"area_id":1,"type":"income"}`
+	body := fmt.Sprintf(`{"date":"15-06-2024","amount":100,"category_id":%d,"area_id":%d,"type":"income"}`, category.ID, area.ID)
 	req := httptest.NewRequest(http.MethodPost, "/transactions/create", strings.NewReader(body))
 	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	rec := httptest.NewRecorder()
