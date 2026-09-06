@@ -11,6 +11,26 @@ CREATE TABLE "Status" (
 INSERT INTO "Status" ("Name") VALUES ('active'), ('inactive'), ('deleted');
 
 -- =========================
+-- Table: Users
+-- =========================
+CREATE TABLE "Users" (
+    "Id" SERIAL PRIMARY KEY,
+    "StatusId" INTEGER NOT NULL,
+    "Name" TEXT NOT NULL,
+    "Login" TEXT NOT NULL UNIQUE,
+    "PasswordHash" TEXT NOT NULL,
+    "CreatedAt" TIMESTAMPTZ NOT NULL DEFAULT now(),
+    "UpdatedAt" TIMESTAMPTZ NOT NULL DEFAULT now(),
+    CONSTRAINT fk_users_status
+        FOREIGN KEY ("StatusId")
+        REFERENCES "Status"("Id")
+        ON DELETE CASCADE
+);
+
+INSERT INTO "Users" ("StatusId", "Name", "Login", "PasswordHash")
+VALUES (1, 'Default', 'default', '');
+
+-- =========================
 -- Table: Categories
 -- =========================
 CREATE TABLE "Categories" (
@@ -19,9 +39,13 @@ CREATE TABLE "Categories" (
     "CreatedAt" TIMESTAMPTZ NOT NULL DEFAULT now(),
     "UpdatedAt" TIMESTAMPTZ NOT NULL DEFAULT now(),
     "StatusId" INTEGER NOT NULL DEFAULT 1,
+    "UserId" INTEGER NOT NULL,
     CONSTRAINT fk_categories_status
         FOREIGN KEY ("StatusId")
-        REFERENCES "Status"("Id")
+        REFERENCES "Status"("Id"),
+    CONSTRAINT fk_categories_user
+        FOREIGN KEY ("UserId")
+        REFERENCES "Users"("Id")
 );
 
 -- =========================
@@ -33,9 +57,13 @@ CREATE TABLE "Areas" (
     "CreatedAt" TIMESTAMPTZ NOT NULL DEFAULT now(),
     "UpdatedAt" TIMESTAMPTZ NOT NULL DEFAULT now(),
     "StatusId" INTEGER NOT NULL DEFAULT 1,
+    "UserId" INTEGER NOT NULL,
     CONSTRAINT fk_areas_status
         FOREIGN KEY ("StatusId")
-        REFERENCES "Status"("Id")
+        REFERENCES "Status"("Id"),
+    CONSTRAINT fk_areas_user
+        FOREIGN KEY ("UserId")
+        REFERENCES "Users"("Id")
 );
 
 -- =========================
@@ -50,6 +78,7 @@ CREATE TABLE "MonthlyBudget" (
     "CreatedAt" TIMESTAMPTZ NOT NULL DEFAULT now(),
     "UpdatedAt" TIMESTAMPTZ NOT NULL DEFAULT now(),
     "StatusId" INTEGER NOT NULL DEFAULT 1,
+    "UserId" INTEGER NOT NULL,
 
     CONSTRAINT fk_area
         FOREIGN KEY ("AreaId")
@@ -59,6 +88,10 @@ CREATE TABLE "MonthlyBudget" (
     CONSTRAINT fk_budget_status
         FOREIGN KEY ("StatusId")
         REFERENCES "Status"("Id"),
+
+    CONSTRAINT fk_budget_user
+        FOREIGN KEY ("UserId")
+        REFERENCES "Users"("Id"),
 
     CONSTRAINT uq_budget UNIQUE ("Year", "Month", "AreaId")
 );
@@ -76,6 +109,7 @@ CREATE TABLE "Transactions" (
     "CreatedAt" TIMESTAMPTZ NOT NULL DEFAULT now(),
     "UpdatedAt" TIMESTAMPTZ NOT NULL DEFAULT now(),
     "StatusId" INTEGER NOT NULL DEFAULT 1,
+    "UserId" INTEGER NOT NULL,
 
     CONSTRAINT fk_category
         FOREIGN KEY ("CategoryId")
@@ -89,7 +123,11 @@ CREATE TABLE "Transactions" (
 
     CONSTRAINT fk_tx_status
         FOREIGN KEY ("StatusId")
-        REFERENCES "Status"("Id")
+        REFERENCES "Status"("Id"),
+
+    CONSTRAINT fk_tx_user
+        FOREIGN KEY ("UserId")
+        REFERENCES "Users"("Id")
 );
 
 -- =========================
@@ -100,6 +138,11 @@ CREATE INDEX idx_transactions_date ON "Transactions"("Date");
 CREATE INDEX idx_transactions_type ON "Transactions"("Type");
 CREATE INDEX idx_transactions_category ON "Transactions"("CategoryId");
 CREATE INDEX idx_transactions_area ON "Transactions"("AreaId");
+CREATE INDEX idx_transactions_user ON "Transactions"("UserId");
 
 CREATE INDEX idx_budget_area ON "MonthlyBudget"("AreaId");
 CREATE INDEX idx_budget_period ON "MonthlyBudget"("Year", "Month");
+CREATE INDEX idx_budget_user ON "MonthlyBudget"("UserId");
+
+CREATE INDEX idx_areas_user ON "Areas"("UserId");
+CREATE INDEX idx_categories_user ON "Categories"("UserId");
