@@ -57,10 +57,10 @@ func TestListTransactionsWithFilters(t *testing.T) {
 	assert.NotEmpty(t, transactions.Data)
 
 	for _, tr := range transactions.Data {
-		database.DeleteTransaction(tr.ID)
+		database.DeleteTransaction(testUserID,tr.ID)
 	}
-	database.DeleteCategory(category.ID)
-	database.DeleteArea(area.ID)
+	database.DeleteCategory(testUserID,category.ID)
+	database.DeleteArea(testUserID,area.ID)
 }
 
 func TestGetTransactionByID(t *testing.T) {
@@ -93,9 +93,9 @@ func TestGetTransactionByID(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, transaction.ID, response.ID)
 
-	database.DeleteTransaction(transaction.ID)
-	database.DeleteCategory(category.ID)
-	database.DeleteArea(area.ID)
+	database.DeleteTransaction(testUserID,transaction.ID)
+	database.DeleteCategory(testUserID,category.ID)
+	database.DeleteArea(testUserID,area.ID)
 }
 
 func TestGetTransactionByIDNotFound(t *testing.T) {
@@ -149,10 +149,10 @@ func TestCreateTransaction(t *testing.T) {
 	assert.Equal(t, "2024-06-15T00:00:00Z", response["date"])
 
 	if id, ok := response["id"].(float64); ok {
-		database.DeleteTransaction(int(id))
+		database.DeleteTransaction(testUserID,int(id))
 	}
-	database.DeleteCategory(category.ID)
-	database.DeleteArea(area.ID)
+	database.DeleteCategory(testUserID,category.ID)
+	database.DeleteArea(testUserID,area.ID)
 }
 
 func TestCreateTransactionInvalidBody(t *testing.T) {
@@ -203,8 +203,8 @@ func TestCreateTransactionInvalidType(t *testing.T) {
 
 	assert.Equal(t, http.StatusBadRequest, rec.Code)
 
-	database.DeleteCategory(category.ID)
-	database.DeleteArea(area.ID)
+	database.DeleteCategory(testUserID,category.ID)
+	database.DeleteArea(testUserID,area.ID)
 }
 
 func TestCreateTransactionInvalidDate(t *testing.T) {
@@ -229,8 +229,8 @@ func TestCreateTransactionInvalidDate(t *testing.T) {
 
 	assert.Equal(t, http.StatusBadRequest, rec.Code)
 
-	database.DeleteCategory(category.ID)
-	database.DeleteArea(area.ID)
+	database.DeleteCategory(testUserID,category.ID)
+	database.DeleteArea(testUserID,area.ID)
 }
 
 func TestUpdateTransaction(t *testing.T) {
@@ -265,9 +265,9 @@ func TestUpdateTransaction(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, 250, response.Amount)
 
-	database.DeleteTransaction(transaction.ID)
-	database.DeleteCategory(category.ID)
-	database.DeleteArea(area.ID)
+	database.DeleteTransaction(testUserID,transaction.ID)
+	database.DeleteCategory(testUserID,category.ID)
+	database.DeleteArea(testUserID,area.ID)
 }
 
 func TestUpdateTransactionNotFound(t *testing.T) {
@@ -326,8 +326,8 @@ func TestDeleteTransaction(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, "Transação excluída com sucesso", response["info"])
 
-	database.DeleteCategory(category.ID)
-	database.DeleteArea(area.ID)
+	database.DeleteCategory(testUserID,category.ID)
+	database.DeleteArea(testUserID,area.ID)
 }
 
 func TestDeleteTransactionNotFound(t *testing.T) {

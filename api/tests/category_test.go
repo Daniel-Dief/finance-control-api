@@ -47,7 +47,7 @@ func TestListCategoriesWithNameFilter(t *testing.T) {
 	assert.NotEmpty(t, categories.Data)
 
 	for _, c := range categories.Data {
-		database.DeleteCategory(c.ID)
+		database.DeleteCategory(testUserID,c.ID)
 	}
 }
 
@@ -71,7 +71,7 @@ func TestGetCategoryByID(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, category.ID, response.ID)
 
-	database.DeleteCategory(category.ID)
+	database.DeleteCategory(testUserID,category.ID)
 }
 
 func TestGetCategoryByIDNotFound(t *testing.T) {
@@ -115,7 +115,7 @@ func TestCreateCategory(t *testing.T) {
 	assert.Equal(t, "New Test Category", response["name"])
 
 	if id, ok := response["id"].(float64); ok {
-		database.DeleteCategory(int(id))
+		database.DeleteCategory(testUserID,int(id))
 	}
 }
 
@@ -167,7 +167,7 @@ func TestUpdateCategory(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, "Updated Category Name", response.Name)
 
-	database.DeleteCategory(category.ID)
+	database.DeleteCategory(testUserID,category.ID)
 }
 
 func TestUpdateCategoryNotFound(t *testing.T) {
@@ -216,7 +216,7 @@ func TestDeleteCategory(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, "Categoria excluída com sucesso", response["info"])
 
-	database.DeleteCategory(category.ID)
+	database.DeleteCategory(testUserID,category.ID)
 }
 
 func TestDeleteCategoryNotFound(t *testing.T) {

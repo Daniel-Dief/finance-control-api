@@ -47,7 +47,7 @@ func TestListAreasWithNameFilter(t *testing.T) {
 	assert.NotEmpty(t, areas.Data)
 
 	for _, a := range areas.Data {
-		database.DeleteArea(a.ID)
+		database.DeleteArea(testUserID,a.ID)
 	}
 }
 
@@ -71,7 +71,7 @@ func TestGetAreaByID(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, area.ID, responseArea.ID)
 
-	database.DeleteArea(area.ID)
+	database.DeleteArea(testUserID,area.ID)
 }
 
 func TestGetAreaByIDNotFound(t *testing.T) {
@@ -115,7 +115,7 @@ func TestCreateArea(t *testing.T) {
 	assert.Equal(t, "New Test Area", response["name"])
 
 	if id, ok := response["id"].(float64); ok {
-		database.DeleteArea(int(id))
+		database.DeleteArea(testUserID,int(id))
 	}
 }
 
@@ -167,7 +167,7 @@ func TestUpdateArea(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, "Updated Area Name", response.Name)
 
-	database.DeleteArea(area.ID)
+	database.DeleteArea(testUserID,area.ID)
 }
 
 func TestUpdateAreaNotFound(t *testing.T) {
@@ -216,7 +216,7 @@ func TestDeleteArea(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, "Área excluída com sucesso", response["info"])
 
-	database.DeleteArea(area.ID)
+	database.DeleteArea(testUserID,area.ID)
 }
 
 func TestDeleteAreaNotFound(t *testing.T) {

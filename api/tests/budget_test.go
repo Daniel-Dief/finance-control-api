@@ -52,9 +52,9 @@ func TestListBudgetsWithFilters(t *testing.T) {
 	assert.NotEmpty(t, budgets.Data)
 
 	for _, b := range budgets.Data {
-		database.DeleteBudget(b.ID)
+		database.DeleteBudget(testUserID,b.ID)
 	}
-	database.DeleteArea(area.ID)
+	database.DeleteArea(testUserID,area.ID)
 }
 
 func TestGetBudgetByID(t *testing.T) {
@@ -82,8 +82,8 @@ func TestGetBudgetByID(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, budget.ID, response.ID)
 
-	database.DeleteBudget(budget.ID)
-	database.DeleteArea(area.ID)
+	database.DeleteBudget(testUserID,budget.ID)
+	database.DeleteArea(testUserID,area.ID)
 }
 
 func TestGetBudgetByIDNotFound(t *testing.T) {
@@ -133,9 +133,9 @@ func TestCreateBudget(t *testing.T) {
 	assert.Equal(t, float64(12), response["month"])
 
 	if id, ok := response["id"].(float64); ok {
-		database.DeleteBudget(int(id))
+		database.DeleteBudget(testUserID,int(id))
 	}
-	database.DeleteArea(area.ID)
+	database.DeleteArea(testUserID,area.ID)
 }
 
 func TestCreateBudgetInvalidBody(t *testing.T) {
@@ -181,7 +181,7 @@ func TestCreateBudgetInvalidMonth(t *testing.T) {
 
 	assert.Equal(t, http.StatusBadRequest, rec.Code)
 
-	database.DeleteArea(area.ID)
+	database.DeleteArea(testUserID,area.ID)
 }
 
 func TestUpdateBudget(t *testing.T) {
@@ -211,8 +211,8 @@ func TestUpdateBudget(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, 7500, response.Amount)
 
-	database.DeleteBudget(budget.ID)
-	database.DeleteArea(area.ID)
+	database.DeleteBudget(testUserID,budget.ID)
+	database.DeleteArea(testUserID,area.ID)
 }
 
 func TestUpdateBudgetNotFound(t *testing.T) {
@@ -266,8 +266,8 @@ func TestDeleteBudget(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, "Orçamento excluído com sucesso", response["info"])
 
-	database.DeleteBudget(budget.ID)
-	database.DeleteArea(area.ID)
+	database.DeleteBudget(testUserID,budget.ID)
+	database.DeleteArea(testUserID,area.ID)
 }
 
 func TestDeleteBudgetNotFound(t *testing.T) {

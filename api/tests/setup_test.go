@@ -12,11 +12,13 @@ import (
 	"testing"
 	"time"
 
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/joho/godotenv"
 	"github.com/labstack/echo/v5"
 	"github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/modules/postgres"
 	"github.com/testcontainers/testcontainers-go/wait"
+	"golang.org/x/crypto/bcrypt"
 )
 
 const (
@@ -24,6 +26,13 @@ const (
 	testDBPass = "postgres"
 	testDBName = "finance_test"
 	testSchema = "../../postgres/init.sql"
+)
+
+// testUser holds the credentials of a user created at runtime by TestMain.
+var (
+	testUserID       int
+	testUserLogin    = "testuser"
+	testUserPassword = "testpassword"
 )
 
 func TestMain(m *testing.M) {
@@ -63,7 +72,28 @@ func runTests(m *testing.M) (int, error) {
 		return 1, fmt.Errorf("pinging database: %w", err)
 	}
 
+	if err := createTestUser(); err != nil {
+		return 1, err
+	}
+
 	return m.Run(), nil
+}
+
+// createTestUser inserts a user used as the authenticated subject of the API
+// tests, since postgres/init.sql has no seed users.
+func createTestUser() error {
+	hash, err := bcrypt.GenerateFromPassword([]byte(testUserPassword), bcrypt.DefaultCost)
+	if err != nil {
+		return fmt.Errorf("hashing test user password: %w", err)
+	}
+
+	user, err := database.CreateUser("Test User", testUserLogin, string(hash))
+	if err != nil {
+		return fmt.Errorf("creating test user: %w", err)
+	}
+
+	testUserID = user.ID
+	return nil
 }
 
 type dbMapping struct {
@@ -139,12 +169,36 @@ func applySchema(ctx context.Context, mapping dbMapping) error {
 
 func setupEcho() *echo.Echo {
 	e := echo.New()
+	e.Use(func(next echo.HandlerFunc) echo.HandlerFunc {
+		return func(c *echo.Context) error {
+			c.Request().Header.Set(echo.HeaderAuthorization, "Bearer "+testToken(testUserID))
+			return next(c)
+		}
+	})
 	routes.BindRoutes(e)
 	return e
 }
 
+// testToken returns a signed JWT carrying the user_id claim used by the
+// JWTMiddleware. The token is only valid if a user with that ID exists, so
+// tests must use testUserID (created in TestMain).
+func testToken(userID int) string {
+	claims := jwt.MapClaims{
+		"user_id": userID,
+		"sub":     testUserLogin,
+		"exp":     time.Now().Add(time.Hour).Unix(),
+		"iat":     time.Now().Unix(),
+	}
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	tokenString, err := token.SignedString([]byte(os.Getenv("JWT_SECRET")))
+	if err != nil {
+		panic(err)
+	}
+	return tokenString
+}
+
 func createTestArea(name string) (models.Area, error) {
-	return database.CreateArea(name)
+	return database.CreateArea(testUserID, name)
 }
 
 func createTestBudget(year, month, areaID, amount int) (models.Budget, error) {
@@ -154,11 +208,11 @@ func createTestBudget(year, month, areaID, amount int) (models.Budget, error) {
 		AreaId: &areaID,
 		Amount: &amount,
 	}
-	return database.CreateBudget(props)
+	return database.CreateBudget(testUserID, props)
 }
 
 func createTestCategory(name string) (models.Category, error) {
-	return database.CreateCategory(name)
+	return database.CreateCategory(testUserID, name)
 }
 
 func createTestTransaction(date string, amount, categoryID, areaID int, transType string) (models.Transaction, error) {
@@ -169,5 +223,5 @@ func createTestTransaction(date string, amount, categoryID, areaID int, transTyp
 		AreaID:     &areaID,
 		Type:       &transType,
 	}
-	return database.CreateTransaction(props)
+	return database.CreateTransaction(testUserID, props)
 }

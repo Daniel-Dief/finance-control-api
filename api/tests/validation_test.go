@@ -99,7 +99,7 @@ func TestBudgetInvalidMonth(t *testing.T) {
 
 	assert.Equal(t, http.StatusBadRequest, rec.Code)
 
-	database.DeleteArea(area.ID)
+	database.DeleteArea(testUserID,area.ID)
 }
 
 func TestBudgetInvalidYear(t *testing.T) {
@@ -119,7 +119,7 @@ func TestBudgetInvalidYear(t *testing.T) {
 
 	assert.Equal(t, http.StatusBadRequest, rec.Code)
 
-	database.DeleteArea(area.ID)
+	database.DeleteArea(testUserID,area.ID)
 }
 
 func TestTransactionInvalidType(t *testing.T) {
@@ -144,8 +144,8 @@ func TestTransactionInvalidType(t *testing.T) {
 
 	assert.Equal(t, http.StatusBadRequest, rec.Code)
 
-	database.DeleteCategory(category.ID)
-	database.DeleteArea(area.ID)
+	database.DeleteCategory(testUserID,category.ID)
+	database.DeleteArea(testUserID,area.ID)
 }
 
 func TestTransactionInvalidDateFormat(t *testing.T) {
@@ -170,8 +170,8 @@ func TestTransactionInvalidDateFormat(t *testing.T) {
 
 	assert.Equal(t, http.StatusBadRequest, rec.Code)
 
-	database.DeleteCategory(category.ID)
-	database.DeleteArea(area.ID)
+	database.DeleteCategory(testUserID,category.ID)
+	database.DeleteArea(testUserID,area.ID)
 }
 
 func TestQueryParameterValidation(t *testing.T) {

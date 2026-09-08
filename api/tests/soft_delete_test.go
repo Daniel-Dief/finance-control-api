@@ -24,7 +24,7 @@ func TestGetAreaByIDAfterDelete(t *testing.T) {
 		t.Fatalf("Failed to create test area: %v", err)
 	}
 
-	err = database.DeleteArea(area.ID)
+	err = database.DeleteArea(testUserID,area.ID)
 	assert.NoError(t, err)
 
 	req := httptest.NewRequest(http.MethodGet, fmt.Sprintf("/areas/%d", area.ID), nil)
@@ -43,7 +43,7 @@ func TestUpdateAreaAfterDelete(t *testing.T) {
 		t.Fatalf("Failed to create test area: %v", err)
 	}
 
-	err = database.DeleteArea(area.ID)
+	err = database.DeleteArea(testUserID,area.ID)
 	assert.NoError(t, err)
 
 	body := `{"name":"Should Not Update"}`
@@ -84,7 +84,7 @@ func TestListAreasExcludesDeleted(t *testing.T) {
 		t.Fatalf("Failed to create test area: %v", err)
 	}
 
-	err = database.DeleteArea(area.ID)
+	err = database.DeleteArea(testUserID,area.ID)
 	assert.NoError(t, err)
 
 	req := httptest.NewRequest(http.MethodGet, "/areas/list?name=Soft%20Delete%20Area%20List", nil)
@@ -103,7 +103,7 @@ func TestGetCategoryByIDAfterDelete(t *testing.T) {
 		t.Fatalf("Failed to create test category: %v", err)
 	}
 
-	err = database.DeleteCategory(category.ID)
+	err = database.DeleteCategory(testUserID,category.ID)
 	assert.NoError(t, err)
 
 	req := httptest.NewRequest(http.MethodGet, fmt.Sprintf("/categories/%d", category.ID), nil)
@@ -122,7 +122,7 @@ func TestUpdateCategoryAfterDelete(t *testing.T) {
 		t.Fatalf("Failed to create test category: %v", err)
 	}
 
-	err = database.DeleteCategory(category.ID)
+	err = database.DeleteCategory(testUserID,category.ID)
 	assert.NoError(t, err)
 
 	body := `{"name":"Should Not Update"}`
@@ -163,7 +163,7 @@ func TestListCategoriesExcludesDeleted(t *testing.T) {
 		t.Fatalf("Failed to create test category: %v", err)
 	}
 
-	err = database.DeleteCategory(category.ID)
+	err = database.DeleteCategory(testUserID,category.ID)
 	assert.NoError(t, err)
 
 	req := httptest.NewRequest(http.MethodGet, "/categories/list?name=Soft%20Delete%20Category%20List", nil)
@@ -181,14 +181,14 @@ func TestGetBudgetByIDAfterDelete(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create test area: %v", err)
 	}
-	defer database.DeleteArea(area.ID)
+	defer database.DeleteArea(testUserID,area.ID)
 
 	budget, err := createTestBudget(2024, 2, area.ID, 1000)
 	if err != nil {
 		t.Fatalf("Failed to create test budget: %v", err)
 	}
 
-	err = database.DeleteBudget(budget.ID)
+	err = database.DeleteBudget(testUserID,budget.ID)
 	assert.NoError(t, err)
 
 	req := httptest.NewRequest(http.MethodGet, fmt.Sprintf("/budgets/%d", budget.ID), nil)
@@ -206,14 +206,14 @@ func TestUpdateBudgetAfterDelete(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create test area: %v", err)
 	}
-	defer database.DeleteArea(area.ID)
+	defer database.DeleteArea(testUserID,area.ID)
 
 	budget, err := createTestBudget(2024, 3, area.ID, 1000)
 	if err != nil {
 		t.Fatalf("Failed to create test budget: %v", err)
 	}
 
-	err = database.DeleteBudget(budget.ID)
+	err = database.DeleteBudget(testUserID,budget.ID)
 	assert.NoError(t, err)
 
 	body := `{"amount":2000}`
@@ -233,7 +233,7 @@ func TestDeleteBudgetTwice(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create test area: %v", err)
 	}
-	defer database.DeleteArea(area.ID)
+	defer database.DeleteArea(testUserID,area.ID)
 
 	budget, err := createTestBudget(2024, 4, area.ID, 1000)
 	if err != nil {
@@ -259,14 +259,14 @@ func TestListBudgetsExcludesDeleted(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create test area: %v", err)
 	}
-	defer database.DeleteArea(area.ID)
+	defer database.DeleteArea(testUserID,area.ID)
 
 	budget, err := createTestBudget(2024, 5, area.ID, 1000)
 	if err != nil {
 		t.Fatalf("Failed to create test budget: %v", err)
 	}
 
-	err = database.DeleteBudget(budget.ID)
+	err = database.DeleteBudget(testUserID,budget.ID)
 	assert.NoError(t, err)
 
 	req := httptest.NewRequest(http.MethodGet, fmt.Sprintf("/budgets/list?year=2024&month=5&area_id=%d", area.ID), nil)
@@ -284,20 +284,20 @@ func TestGetTransactionByIDAfterDelete(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create test area: %v", err)
 	}
-	defer database.DeleteArea(area.ID)
+	defer database.DeleteArea(testUserID,area.ID)
 
 	category, err := createTestCategory("Soft Delete Transaction Get Category")
 	if err != nil {
 		t.Fatalf("Failed to create test category: %v", err)
 	}
-	defer database.DeleteCategory(category.ID)
+	defer database.DeleteCategory(testUserID,category.ID)
 
 	transaction, err := createTestTransaction("2024-06-15", 100, category.ID, area.ID, "income")
 	if err != nil {
 		t.Fatalf("Failed to create test transaction: %v", err)
 	}
 
-	err = database.DeleteTransaction(transaction.ID)
+	err = database.DeleteTransaction(testUserID,transaction.ID)
 	assert.NoError(t, err)
 
 	req := httptest.NewRequest(http.MethodGet, fmt.Sprintf("/transactions/%d", transaction.ID), nil)
@@ -315,20 +315,20 @@ func TestUpdateTransactionAfterDelete(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create test area: %v", err)
 	}
-	defer database.DeleteArea(area.ID)
+	defer database.DeleteArea(testUserID,area.ID)
 
 	category, err := createTestCategory("Soft Delete Transaction Update Category")
 	if err != nil {
 		t.Fatalf("Failed to create test category: %v", err)
 	}
-	defer database.DeleteCategory(category.ID)
+	defer database.DeleteCategory(testUserID,category.ID)
 
 	transaction, err := createTestTransaction("2024-06-15", 100, category.ID, area.ID, "income")
 	if err != nil {
 		t.Fatalf("Failed to create test transaction: %v", err)
 	}
 
-	err = database.DeleteTransaction(transaction.ID)
+	err = database.DeleteTransaction(testUserID,transaction.ID)
 	assert.NoError(t, err)
 
 	body := `{"amount":250}`
@@ -348,13 +348,13 @@ func TestDeleteTransactionTwice(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create test area: %v", err)
 	}
-	defer database.DeleteArea(area.ID)
+	defer database.DeleteArea(testUserID,area.ID)
 
 	category, err := createTestCategory("Soft Delete Transaction Twice Category")
 	if err != nil {
 		t.Fatalf("Failed to create test category: %v", err)
 	}
-	defer database.DeleteCategory(category.ID)
+	defer database.DeleteCategory(testUserID,category.ID)
 
 	transaction, err := createTestTransaction("2024-06-15", 100, category.ID, area.ID, "expense")
 	if err != nil {
@@ -380,20 +380,20 @@ func TestListTransactionsExcludesDeleted(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create test area: %v", err)
 	}
-	defer database.DeleteArea(area.ID)
+	defer database.DeleteArea(testUserID,area.ID)
 
 	category, err := createTestCategory("Soft Delete Transaction List Category")
 	if err != nil {
 		t.Fatalf("Failed to create test category: %v", err)
 	}
-	defer database.DeleteCategory(category.ID)
+	defer database.DeleteCategory(testUserID,category.ID)
 
 	transaction, err := createTestTransaction("2024-06-15", 100, category.ID, area.ID, "income")
 	if err != nil {
 		t.Fatalf("Failed to create test transaction: %v", err)
 	}
 
-	err = database.DeleteTransaction(transaction.ID)
+	err = database.DeleteTransaction(testUserID,transaction.ID)
 	assert.NoError(t, err)
 
 	req := httptest.NewRequest(http.MethodGet, fmt.Sprintf("/transactions/list?type=income&category_id=%d", category.ID), nil)
@@ -411,15 +411,15 @@ func TestCreateAndVerifyListContainsActive(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create test area: %v", err)
 	}
-	defer database.DeleteArea(active.ID)
+	defer database.DeleteArea(testUserID,active.ID)
 
 	deleted, err := createTestArea("Deleted Area Hidden")
 	if err != nil {
 		t.Fatalf("Failed to create test area: %v", err)
 	}
-	defer database.DeleteArea(deleted.ID)
+	defer database.DeleteArea(testUserID,deleted.ID)
 
-	err = database.DeleteArea(deleted.ID)
+	err = database.DeleteArea(testUserID,deleted.ID)
 	assert.NoError(t, err)
 
 	req := httptest.NewRequest(http.MethodGet, "/areas/list?name=Survives", nil)
