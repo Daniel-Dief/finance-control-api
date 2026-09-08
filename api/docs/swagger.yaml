@@ -66,6 +66,8 @@ definitions:
         type: integer
       name:
         type: string
+      user_id:
+        type: integer
     type: object
   models.Budget:
     properties:
@@ -77,6 +79,8 @@ definitions:
         type: integer
       month:
         type: integer
+      user_id:
+        type: integer
       year:
         type: integer
     type: object
@@ -86,6 +90,8 @@ definitions:
         type: integer
       name:
         type: string
+      user_id:
+        type: integer
     type: object
   models.Transaction:
     properties:
@@ -102,6 +108,8 @@ definitions:
       type:
         description: '''income'' or ''expense'''
         type: string
+      user_id:
+        type: integer
     type: object
   routes.AreaBody:
     properties:
@@ -149,6 +157,37 @@ definitions:
     required:
     - name
     type: object
+  routes.LoginBody:
+    properties:
+      login:
+        type: string
+      password:
+        type: string
+    required:
+    - login
+    - password
+    type: object
+  routes.LoginResponse:
+    properties:
+      token:
+        type: string
+      user:
+        $ref: '#/definitions/routes.UserPayload'
+    type: object
+  routes.RegisterBody:
+    properties:
+      login:
+        type: string
+      name:
+        type: string
+      password:
+        minLength: 6
+        type: string
+    required:
+    - login
+    - name
+    - password
+    type: object
   routes.TransactionBody:
     properties:
       amount:
@@ -185,6 +224,15 @@ definitions:
         enum:
         - income
         - expense
+        type: string
+    type: object
+  routes.UserPayload:
+    properties:
+      id:
+        type: integer
+      login:
+        type: string
+      name:
         type: string
     type: object
 host: localhost:1323
@@ -308,6 +356,12 @@ paths:
             additionalProperties:
               type: string
             type: object
+        "409":
+          description: Conflict
+          schema:
+            additionalProperties:
+              type: string
+            type: object
         "500":
           description: Internal Server Error
           schema:
@@ -340,6 +394,12 @@ paths:
           description: Bad Request
           schema:
             additionalProperties: true
+            type: object
+        "409":
+          description: Conflict
+          schema:
+            additionalProperties:
+              type: string
             type: object
         "500":
           description: Internal Server Error
@@ -385,6 +445,86 @@ paths:
       summary: Listar áreas
       tags:
       - areas
+  /auth/login:
+    post:
+      consumes:
+      - application/json
+      description: Valida login e senha e retorna um token JWT com o identificador
+        do usuário.
+      parameters:
+      - description: Credenciais do usuário
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/routes.LoginBody'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/routes.LoginResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Autenticar usuário
+      tags:
+      - auth
+  /auth/register:
+    post:
+      consumes:
+      - application/json
+      description: Cria um novo usuário com status ativo. O login deve ser único e
+        a senha precisa de no mínimo 6 caracteres.
+      parameters:
+      - description: Dados do novo usuário
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/routes.RegisterBody'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/routes.UserPayload'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "409":
+          description: Conflict
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Criar usuário
+      tags:
+      - auth
   /budgets/{id}:
     delete:
       consumes:
@@ -499,6 +639,12 @@ paths:
             additionalProperties:
               type: string
             type: object
+        "409":
+          description: Conflict
+          schema:
+            additionalProperties:
+              type: string
+            type: object
         "500":
           description: Internal Server Error
           schema:
@@ -532,6 +678,12 @@ paths:
           description: Bad Request
           schema:
             additionalProperties: true
+            type: object
+        "409":
+          description: Conflict
+          schema:
+            additionalProperties:
+              type: string
             type: object
         "500":
           description: Internal Server Error
@@ -698,6 +850,12 @@ paths:
             additionalProperties:
               type: string
             type: object
+        "409":
+          description: Conflict
+          schema:
+            additionalProperties:
+              type: string
+            type: object
         "500":
           description: Internal Server Error
           schema:
@@ -731,6 +889,12 @@ paths:
           description: Bad Request
           schema:
             additionalProperties: true
+            type: object
+        "409":
+          description: Conflict
+          schema:
+            additionalProperties:
+              type: string
             type: object
         "500":
           description: Internal Server Error
