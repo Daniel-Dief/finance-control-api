@@ -2,6 +2,7 @@ package routes
 
 import (
 	"finance-control-api/database"
+	"finance-control-api/middlewares"
 	"net/http"
 	"os"
 
@@ -16,11 +17,22 @@ func BindRoutes(echoAPI *echo.Echo) {
 	// Bind health check route
 	HealthCheck(echoAPI)
 
+	// Auth routes (public - no JWT required)
+	authGroup := echoAPI.Group("/auth")
+	Register(authGroup)
+	Login(authGroup)
+
 	// Create route groups for areas, budgets, categories, and transactions
 	areaGroup := echoAPI.Group("/areas")
 	budgetGroup := echoAPI.Group("/budgets")
 	categoryGroup := echoAPI.Group("/categories")
 	transactionGroup := echoAPI.Group("/transactions")
+
+	// Apply JWT middleware to resource groups
+	areaGroup.Use(middlewares.JWTMiddleware())
+	budgetGroup.Use(middlewares.JWTMiddleware())
+	categoryGroup.Use(middlewares.JWTMiddleware())
+	transactionGroup.Use(middlewares.JWTMiddleware())
 
 	// Bind area routes
 	ListAreas(areaGroup)

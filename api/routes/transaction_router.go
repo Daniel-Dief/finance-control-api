@@ -58,6 +58,11 @@ type TransactionUpdateBody struct {
 //	@Router			/transactions/list [get]
 func ListTransactions(transactionGroup *echo.Group) {
 	transactionGroup.GET("/list", func(c *echo.Context) error {
+		userID, err := currentUserID(c)
+		if err != nil {
+			return c.JSON(http.StatusUnauthorized, map[string]interface{}{"error": err.Error()})
+		}
+
 		var params TransactionQueryParams
 		if !bindAndValidateQuery(c, &params) {
 			return nil
@@ -73,7 +78,7 @@ func ListTransactions(transactionGroup *echo.Group) {
 
 		pag := parsePagination(params.Page, params.Limit)
 
-		transactions, err := database.ListTransactions(filters, pag)
+		transactions, err := database.ListTransactions(userID, filters, pag)
 
 		if err != nil {
 			return c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
@@ -101,12 +106,17 @@ func ListTransactions(transactionGroup *echo.Group) {
 //	@Router			/transactions/{id} [get]
 func GetTransactionByID(transactionGroup *echo.Group) {
 	transactionGroup.GET("/:id", func(c *echo.Context) error {
+		userID, err := currentUserID(c)
+		if err != nil {
+			return c.JSON(http.StatusUnauthorized, map[string]interface{}{"error": err.Error()})
+		}
+
 		var params PathIDParams
 		if !bindAndValidatePath(c, &params) {
 			return nil
 		}
 
-		transaction, err := database.GetTransactionByID(params.ID)
+		transaction, err := database.GetTransactionByID(userID, params.ID)
 
 		if errors.Is(err, database.ErrNotFound) {
 			return c.JSON(http.StatusNotFound, map[string]interface{}{"error": "Transação não encontrada"})
@@ -133,6 +143,11 @@ func GetTransactionByID(transactionGroup *echo.Group) {
 //	@Router			/transactions/create [post]
 func CreateTransaction(transactionGroup *echo.Group) {
 	transactionGroup.POST("/create", func(c *echo.Context) error {
+		userID, err := currentUserID(c)
+		if err != nil {
+			return c.JSON(http.StatusUnauthorized, map[string]interface{}{"error": err.Error()})
+		}
+
 		var body TransactionBody
 
 		if !bindAndValidate(c, &body) {
@@ -147,7 +162,7 @@ func CreateTransaction(transactionGroup *echo.Group) {
 			Type:       &body.Type,
 		}
 
-		createdTransaction, err := database.CreateTransaction(props)
+		createdTransaction, err := database.CreateTransaction(userID, props)
 
 		if err != nil {
 			return c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
@@ -173,6 +188,11 @@ func CreateTransaction(transactionGroup *echo.Group) {
 //	@Router			/transactions/{id} [put]
 func UpdateTransaction(transactionGroup *echo.Group) {
 	transactionGroup.PUT("/:id", func(c *echo.Context) error {
+		userID, err := currentUserID(c)
+		if err != nil {
+			return c.JSON(http.StatusUnauthorized, map[string]interface{}{"error": err.Error()})
+		}
+
 		var params PathIDParams
 		if !bindAndValidatePath(c, &params) {
 			return nil
@@ -192,7 +212,7 @@ func UpdateTransaction(transactionGroup *echo.Group) {
 			Type:       body.Type,
 		}
 
-		updatedTransaction, err := database.UpdateTransaction(params.ID, props)
+		updatedTransaction, err := database.UpdateTransaction(userID, params.ID, props)
 
 		if errors.Is(err, database.ErrNotFound) {
 			return c.JSON(http.StatusNotFound, map[string]interface{}{"error": "Transação não encontrada"})
@@ -220,12 +240,17 @@ func UpdateTransaction(transactionGroup *echo.Group) {
 //	@Router			/transactions/{id} [delete]
 func DeleteTransaction(transactionGroup *echo.Group) {
 	transactionGroup.DELETE("/:id", func(c *echo.Context) error {
+		userID, err := currentUserID(c)
+		if err != nil {
+			return c.JSON(http.StatusUnauthorized, map[string]interface{}{"error": err.Error()})
+		}
+
 		var params PathIDParams
 		if !bindAndValidatePath(c, &params) {
 			return nil
 		}
 
-		err := database.DeleteTransaction(params.ID)
+		err = database.DeleteTransaction(userID, params.ID)
 		if errors.Is(err, database.ErrNotFound) {
 			return c.JSON(http.StatusNotFound, map[string]interface{}{"error": "Transação não encontrada"})
 		}

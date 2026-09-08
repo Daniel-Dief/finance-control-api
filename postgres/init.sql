@@ -27,15 +27,12 @@ CREATE TABLE "Users" (
         ON DELETE CASCADE
 );
 
-INSERT INTO "Users" ("StatusId", "Name", "Login", "PasswordHash")
-VALUES (1, 'Default', 'default', '');
-
 -- =========================
 -- Table: Categories
 -- =========================
 CREATE TABLE "Categories" (
     "Id" SERIAL PRIMARY KEY,
-    "Name" TEXT NOT NULL UNIQUE,
+    "Name" TEXT NOT NULL,
     "CreatedAt" TIMESTAMPTZ NOT NULL DEFAULT now(),
     "UpdatedAt" TIMESTAMPTZ NOT NULL DEFAULT now(),
     "StatusId" INTEGER NOT NULL DEFAULT 1,
@@ -53,7 +50,7 @@ CREATE TABLE "Categories" (
 -- =========================
 CREATE TABLE "Areas" (
     "Id" SERIAL PRIMARY KEY,
-    "Name" TEXT NOT NULL UNIQUE,
+    "Name" TEXT NOT NULL,
     "CreatedAt" TIMESTAMPTZ NOT NULL DEFAULT now(),
     "UpdatedAt" TIMESTAMPTZ NOT NULL DEFAULT now(),
     "StatusId" INTEGER NOT NULL DEFAULT 1,
@@ -91,9 +88,7 @@ CREATE TABLE "MonthlyBudget" (
 
     CONSTRAINT fk_budget_user
         FOREIGN KEY ("UserId")
-        REFERENCES "Users"("Id"),
-
-    CONSTRAINT uq_budget UNIQUE ("Year", "Month", "AreaId")
+        REFERENCES "Users"("Id")
 );
 
 -- =========================
@@ -146,3 +141,9 @@ CREATE INDEX idx_budget_user ON "MonthlyBudget"("UserId");
 
 CREATE INDEX idx_areas_user ON "Areas"("UserId");
 CREATE INDEX idx_categories_user ON "Categories"("UserId");
+
+-- Unicidade por usuário, considerando apenas registros ativos:
+-- nomes e orçamentos podem ser reutilizados após soft delete.
+CREATE UNIQUE INDEX uq_areas_name_user ON "Areas"("Name", "UserId") WHERE "StatusId" = 1;
+CREATE UNIQUE INDEX uq_categories_name_user ON "Categories"("Name", "UserId") WHERE "StatusId" = 1;
+CREATE UNIQUE INDEX uq_budget_period_user ON "MonthlyBudget"("Year", "Month", "AreaId", "UserId") WHERE "StatusId" = 1;

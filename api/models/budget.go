@@ -6,4 +6,5 @@ type Budget struct {
 	Month  int `json:"month"`
 	AreaID int `json:"area_id"`
 	Amount int `json:"amount"`
+	UserID int `json:"user_id"`
 }

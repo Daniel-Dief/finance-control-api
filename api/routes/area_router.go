@@ -35,6 +35,11 @@ type AreaBody struct {
 //	@Router			/areas/list [get]
 func ListAreas(areaGroup *echo.Group) {
 	areaGroup.GET("/list", func(c *echo.Context) error {
+		userID, err := currentUserID(c)
+		if err != nil {
+			return c.JSON(http.StatusUnauthorized, map[string]interface{}{"error": err.Error()})
+		}
+
 		var params AreaQueryParams
 		if !bindAndValidateQuery(c, &params) {
 			return nil
@@ -42,7 +47,7 @@ func ListAreas(areaGroup *echo.Group) {
 
 		pag := parsePagination(params.Page, params.Limit)
 
-		areas, err := database.ListAreas(params.Name, pag)
+		areas, err := database.ListAreas(userID, params.Name, pag)
 
 		if err != nil {
 			return c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
@@ -70,12 +75,17 @@ func ListAreas(areaGroup *echo.Group) {
 //	@Router			/areas/{id} [get]
 func GetAreaByID(areaGroup *echo.Group) {
 	areaGroup.GET("/:id", func(c *echo.Context) error {
+		userID, err := currentUserID(c)
+		if err != nil {
+			return c.JSON(http.StatusUnauthorized, map[string]interface{}{"error": err.Error()})
+		}
+
 		var params PathIDParams
 		if !bindAndValidatePath(c, &params) {
 			return nil
 		}
 
-		area, err := database.GetAreaByID(params.ID)
+		area, err := database.GetAreaByID(userID, params.ID)
 
 		if errors.Is(err, database.ErrNotFound) {
 			return c.JSON(http.StatusNotFound, map[string]interface{}{"error": "Área não encontrada"})
@@ -98,18 +108,27 @@ func GetAreaByID(areaGroup *echo.Group) {
 //	@Param			body	body		AreaBody	true	"Dados da nova área"
 //	@Success		201		{object}	models.Area
 //	@Failure		400		{object}	map[string]interface{}
+//	@Failure		409		{object}	map[string]string
 //	@Failure		500		{object}	map[string]string
 //	@Router			/areas/create [post]
 func CreateArea(areaGroup *echo.Group) {
 	areaGroup.POST("/create", func(c *echo.Context) error {
+		userID, err := currentUserID(c)
+		if err != nil {
+			return c.JSON(http.StatusUnauthorized, map[string]interface{}{"error": err.Error()})
+		}
+
 		var body AreaBody
 
 		if !bindAndValidate(c, &body) {
 			return nil
 		}
 
-		createdArea, err := database.CreateArea(body.Name)
+		createdArea, err := database.CreateArea(userID, body.Name)
 
+		if errors.Is(err, database.ErrDuplicateArea) {
+			return c.JSON(http.StatusConflict, map[string]interface{}{"error": err.Error()})
+		}
 		if err != nil {
 			return c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
 		}
@@ -130,10 +149,16 @@ func CreateArea(areaGroup *echo.Group) {
 //	@Success		200		{object}	models.Area
 //	@Failure		400		{object}	map[string]interface{}
 //	@Failure		404		{object}	map[string]string
+//	@Failure		409		{object}	map[string]string
 //	@Failure		500		{object}	map[string]string
 //	@Router			/areas/{id} [put]
 func UpdateArea(areaGroup *echo.Group) {
 	areaGroup.PUT("/:id", func(c *echo.Context) error {
+		userID, err := currentUserID(c)
+		if err != nil {
+			return c.JSON(http.StatusUnauthorized, map[string]interface{}{"error": err.Error()})
+		}
+
 		var params PathIDParams
 		if !bindAndValidatePath(c, &params) {
 			return nil
@@ -145,10 +170,13 @@ func UpdateArea(areaGroup *echo.Group) {
 			return nil
 		}
 
-		updatedArea, err := database.UpdateArea(params.ID, body.Name)
+		updatedArea, err := database.UpdateArea(userID, params.ID, body.Name)
 
 		if errors.Is(err, database.ErrNotFound) {
 			return c.JSON(http.StatusNotFound, map[string]interface{}{"error": "Área não encontrada"})
+		}
+		if errors.Is(err, database.ErrDuplicateArea) {
+			return c.JSON(http.StatusConflict, map[string]interface{}{"error": err.Error()})
 		}
 		if err != nil {
 			return c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
@@ -173,12 +201,17 @@ func UpdateArea(areaGroup *echo.Group) {
 //	@Router			/areas/{id} [delete]
 func DeleteArea(areaGroup *echo.Group) {
 	areaGroup.DELETE("/:id", func(c *echo.Context) error {
+		userID, err := currentUserID(c)
+		if err != nil {
+			return c.JSON(http.StatusUnauthorized, map[string]interface{}{"error": err.Error()})
+		}
+
 		var params PathIDParams
 		if !bindAndValidatePath(c, &params) {
 			return nil
 		}
 
-		err := database.DeleteArea(params.ID)
+		err = database.DeleteArea(userID, params.ID)
 		if errors.Is(err, database.ErrNotFound) {
 			return c.JSON(http.StatusNotFound, map[string]interface{}{"error": "Área não encontrada"})
 		}

@@ -52,6 +52,11 @@ type BudgetUpdateBody struct {
 //	@Router			/budgets/list [get]
 func ListBudgets(budgetGroup *echo.Group) {
 	budgetGroup.GET("/list", func(c *echo.Context) error {
+		userID, err := currentUserID(c)
+		if err != nil {
+			return c.JSON(http.StatusUnauthorized, map[string]interface{}{"error": err.Error()})
+		}
+
 		var params BudgetQueryParams
 		if !bindAndValidateQuery(c, &params) {
 			return nil
@@ -65,7 +70,7 @@ func ListBudgets(budgetGroup *echo.Group) {
 
 		pag := parsePagination(params.Page, params.Limit)
 
-		budgets, err := database.ListBudgets(props, pag)
+		budgets, err := database.ListBudgets(userID, props, pag)
 
 		if err != nil {
 			return c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
@@ -93,12 +98,17 @@ func ListBudgets(budgetGroup *echo.Group) {
 //	@Router			/budgets/{id} [get]
 func GetBudgetByID(budgetGroup *echo.Group) {
 	budgetGroup.GET("/:id", func(c *echo.Context) error {
+		userID, err := currentUserID(c)
+		if err != nil {
+			return c.JSON(http.StatusUnauthorized, map[string]interface{}{"error": err.Error()})
+		}
+
 		var params PathIDParams
 		if !bindAndValidatePath(c, &params) {
 			return nil
 		}
 
-		budget, err := database.GetBudgetByID(params.ID)
+		budget, err := database.GetBudgetByID(userID, params.ID)
 
 		if errors.Is(err, database.ErrNotFound) {
 			return c.JSON(http.StatusNotFound, map[string]interface{}{"error": "Orçamento não encontrado"})
@@ -121,10 +131,16 @@ func GetBudgetByID(budgetGroup *echo.Group) {
 //	@Param			body	body		BudgetBody	true	"Dados do novo orçamento"
 //	@Success		201		{object}	models.Budget
 //	@Failure		400		{object}		map[string]interface{}
+//	@Failure		409		{object}		map[string]string
 //	@Failure		500		{object}		map[string]string
 //	@Router			/budgets/create [post]
 func CreateBudget(budgetGroup *echo.Group) {
 	budgetGroup.POST("/create", func(c *echo.Context) error {
+		userID, err := currentUserID(c)
+		if err != nil {
+			return c.JSON(http.StatusUnauthorized, map[string]interface{}{"error": err.Error()})
+		}
+
 		var body BudgetBody
 
 		if !bindAndValidate(c, &body) {
@@ -138,8 +154,11 @@ func CreateBudget(budgetGroup *echo.Group) {
 			Amount: &body.Amount,
 		}
 
-		createdBudget, err := database.CreateBudget(props)
+		createdBudget, err := database.CreateBudget(userID, props)
 
+		if errors.Is(err, database.ErrDuplicateBudget) {
+			return c.JSON(http.StatusConflict, map[string]interface{}{"error": err.Error()})
+		}
 		if err != nil {
 			return c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
 		}
@@ -160,10 +179,16 @@ func CreateBudget(budgetGroup *echo.Group) {
 //	@Success		200		{object}	models.Budget
 //	@Failure		400		{object}	map[string]interface{}
 //	@Failure		404		{object}	map[string]string
+//	@Failure		409		{object}	map[string]string
 //	@Failure		500		{object}	map[string]string
 //	@Router			/budgets/{id} [put]
 func UpdateBudget(budgetGroup *echo.Group) {
 	budgetGroup.PUT("/:id", func(c *echo.Context) error {
+		userID, err := currentUserID(c)
+		if err != nil {
+			return c.JSON(http.StatusUnauthorized, map[string]interface{}{"error": err.Error()})
+		}
+
 		var params PathIDParams
 		if !bindAndValidatePath(c, &params) {
 			return nil
@@ -182,10 +207,13 @@ func UpdateBudget(budgetGroup *echo.Group) {
 			Amount: body.Amount,
 		}
 
-		updatedBudget, err := database.UpdateBudget(params.ID, props)
+		updatedBudget, err := database.UpdateBudget(userID, params.ID, props)
 
 		if errors.Is(err, database.ErrNotFound) {
 			return c.JSON(http.StatusNotFound, map[string]interface{}{"error": "Orçamento não encontrado"})
+		}
+		if errors.Is(err, database.ErrDuplicateBudget) {
+			return c.JSON(http.StatusConflict, map[string]interface{}{"error": err.Error()})
 		}
 		if err != nil {
 			return c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
@@ -210,12 +238,17 @@ func UpdateBudget(budgetGroup *echo.Group) {
 //	@Router			/budgets/{id} [delete]
 func DeleteBudget(budgetGroup *echo.Group) {
 	budgetGroup.DELETE("/:id", func(c *echo.Context) error {
+		userID, err := currentUserID(c)
+		if err != nil {
+			return c.JSON(http.StatusUnauthorized, map[string]interface{}{"error": err.Error()})
+		}
+
 		var params PathIDParams
 		if !bindAndValidatePath(c, &params) {
 			return nil
 		}
 
-		err := database.DeleteBudget(params.ID)
+		err = database.DeleteBudget(userID, params.ID)
 		if errors.Is(err, database.ErrNotFound) {
 			return c.JSON(http.StatusNotFound, map[string]interface{}{"error": "Orçamento não encontrado"})
 		}

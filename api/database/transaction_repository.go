@@ -24,36 +24,36 @@ type TransactionFilters struct {
 	To         *string
 }
 
-// ListTransactions retrieves a paginated list of transactions from the database
-// based on the provided filters.
-func ListTransactions(filters TransactionFilters, pag Pagination) (*PaginatedResult[models.Transaction], error) {
+// ListTransactions retrieves a paginated list of transactions for the given
+// user based on the provided filters.
+func ListTransactions(userID int, filters TransactionFilters, pag Pagination) (*PaginatedResult[models.Transaction], error) {
 	where := `
-		WHERE "StatusId" = 1
-		AND ($1::text IS NULL OR "Type" = $1)
-		AND ($2::integer IS NULL OR "CategoryId" = $2)
-		AND ($3::integer IS NULL OR "AreaId" = $3)
-		AND ($4::date IS NULL OR "Date" >= $4)
-		AND ($5::date IS NULL OR "Date" <= $5)
+		WHERE "StatusId" = 1 AND "UserId" = $1
+		AND ($2::text IS NULL OR "Type" = $2)
+		AND ($3::integer IS NULL OR "CategoryId" = $3)
+		AND ($4::integer IS NULL OR "AreaId" = $4)
+		AND ($5::date IS NULL OR "Date" >= $5)
+		AND ($6::date IS NULL OR "Date" <= $6)
 	`
 
 	var total int
 	if err := Pool.QueryRowContext(context.Background(),
 		`SELECT COUNT(*) FROM "Transactions" `+where,
-		filters.Type, filters.CategoryID, filters.AreaID, filters.From, filters.To).Scan(&total); err != nil {
+		userID, filters.Type, filters.CategoryID, filters.AreaID, filters.From, filters.To).Scan(&total); err != nil {
 		log.Println("Error executing count query:", err)
 		return nil, ErrGenericDatabase
 	}
 
 	query := `
-		SELECT "Id", "Date", "Amount", "CategoryId", "AreaId", "Type"
+		SELECT "Id", "Date", "Amount", "CategoryId", "AreaId", "Type", "UserId"
 		FROM "Transactions"
 		` + where + `
 		ORDER BY "Id"
-		LIMIT $6 OFFSET $7
+		LIMIT $7 OFFSET $8
 	`
 
 	rows, err := Pool.QueryContext(context.Background(), query,
-		filters.Type, filters.CategoryID, filters.AreaID, filters.From, filters.To, pag.Limit, pag.Offset())
+		userID, filters.Type, filters.CategoryID, filters.AreaID, filters.From, filters.To, pag.Limit, pag.Offset())
 	if err != nil {
 		log.Println("Error executing query:", err)
 		return nil, ErrGenericDatabase
@@ -68,7 +68,7 @@ func ListTransactions(filters TransactionFilters, pag Pagination) (*PaginatedRes
 	result := make([]models.Transaction, 0)
 	for rows.Next() {
 		var t models.Transaction
-		if err := rows.Scan(&t.ID, &t.Date, &t.Amount, &t.CategoryID, &t.AreaID, &t.Type); err != nil {
+		if err := rows.Scan(&t.ID, &t.Date, &t.Amount, &t.CategoryID, &t.AreaID, &t.Type, &t.UserID); err != nil {
 			log.Println("Error scanning row:", err)
 			return nil, ErrBindQuery
 		}
@@ -79,16 +79,16 @@ func ListTransactions(filters TransactionFilters, pag Pagination) (*PaginatedRes
 	return &paginated, nil
 }
 
-// GetTransactionByID retrieves a single transaction from the database based on its ID.
-func GetTransactionByID(id int) (models.Transaction, error) {
+// GetTransactionByID retrieves a single transaction for the given user based on its ID.
+func GetTransactionByID(userID, id int) (models.Transaction, error) {
 	query := `
-		SELECT "Id", "Date", "Amount", "CategoryId", "AreaId", "Type"
+		SELECT "Id", "Date", "Amount", "CategoryId", "AreaId", "Type", "UserId"
 		FROM "Transactions"
-		WHERE "Id" = $1 AND "StatusId" = 1
+		WHERE "Id" = $1 AND "UserId" = $2 AND "StatusId" = 1
 	`
 
 	var t models.Transaction
-	err := Pool.QueryRowContext(context.Background(), query, id).Scan(&t.ID, &t.Date, &t.Amount, &t.CategoryID, &t.AreaID, &t.Type)
+	err := Pool.QueryRowContext(context.Background(), query, id, userID).Scan(&t.ID, &t.Date, &t.Amount, &t.CategoryID, &t.AreaID, &t.Type, &t.UserID)
 
 	if errors.Is(err, sql.ErrNoRows) {
 		return models.Transaction{}, ErrNotFound
@@ -100,18 +100,18 @@ func GetTransactionByID(id int) (models.Transaction, error) {
 	return t, nil
 }
 
-// CreateTransaction inserts a new transaction into the database and returns the created transaction.
-func CreateTransaction(props TransactionProps) (models.Transaction, error) {
+// CreateTransaction inserts a new transaction for the given user and returns the created transaction.
+func CreateTransaction(userID int, props TransactionProps) (models.Transaction, error) {
 	query := `
-		INSERT INTO "Transactions" ("Date", "Amount", "CategoryId", "AreaId", "Type")
-		VALUES ($1, $2, $3, $4, $5)
-		RETURNING "Id", "Date", "Amount", "CategoryId", "AreaId", "Type"
+		INSERT INTO "Transactions" ("Date", "Amount", "CategoryId", "AreaId", "Type", "UserId")
+		VALUES ($1, $2, $3, $4, $5, $6)
+		RETURNING "Id", "Date", "Amount", "CategoryId", "AreaId", "Type", "UserId"
 	`
 
 	var t models.Transaction
 	err := Pool.QueryRowContext(context.Background(),
-		query, props.Date, props.Amount, props.CategoryID, props.AreaID, props.Type).
-		Scan(&t.ID, &t.Date, &t.Amount, &t.CategoryID, &t.AreaID, &t.Type)
+		query, props.Date, props.Amount, props.CategoryID, props.AreaID, props.Type, userID).
+		Scan(&t.ID, &t.Date, &t.Amount, &t.CategoryID, &t.AreaID, &t.Type, &t.UserID)
 	if err != nil {
 		log.Println("Error executing query:", err)
 		return models.Transaction{}, ErrRegisterObject("transação")
@@ -120,8 +120,9 @@ func CreateTransaction(props TransactionProps) (models.Transaction, error) {
 	return t, nil
 }
 
-// UpdateTransaction updates an existing transaction in the database based on its ID and the provided properties.
-func UpdateTransaction(id int, props TransactionProps) (models.Transaction, error) {
+// UpdateTransaction updates an existing transaction belonging to the given user
+// based on its ID and the provided properties.
+func UpdateTransaction(userID, id int, props TransactionProps) (models.Transaction, error) {
 	query := `
 		UPDATE "Transactions"
 		SET "Date" = COALESCE($1, "Date"),
@@ -129,13 +130,13 @@ func UpdateTransaction(id int, props TransactionProps) (models.Transaction, erro
 			"CategoryId" = COALESCE($3, "CategoryId"),
 			"AreaId" = COALESCE($4, "AreaId"),
 			"Type" = COALESCE($5, "Type")
-		WHERE "Id" = $6 AND "StatusId" = 1
-		RETURNING "Id", "Date", "Amount", "CategoryId", "AreaId", "Type"
+		WHERE "Id" = $6 AND "UserId" = $7 AND "StatusId" = 1
+		RETURNING "Id", "Date", "Amount", "CategoryId", "AreaId", "Type", "UserId"
 	`
 
 	var t models.Transaction
-	err := Pool.QueryRowContext(context.Background(), query, props.Date, props.Amount, props.CategoryID, props.AreaID, props.Type, id).
-		Scan(&t.ID, &t.Date, &t.Amount, &t.CategoryID, &t.AreaID, &t.Type)
+	err := Pool.QueryRowContext(context.Background(), query, props.Date, props.Amount, props.CategoryID, props.AreaID, props.Type, id, userID).
+		Scan(&t.ID, &t.Date, &t.Amount, &t.CategoryID, &t.AreaID, &t.Type, &t.UserID)
 
 	if errors.Is(err, sql.ErrNoRows) {
 		return models.Transaction{}, ErrNotFound
@@ -147,15 +148,16 @@ func UpdateTransaction(id int, props TransactionProps) (models.Transaction, erro
 	return t, nil
 }
 
-// DeleteTransaction soft-deletes a transaction by setting its StatusId to 3 (deleted).
-func DeleteTransaction(id int) error {
+// DeleteTransaction soft-deletes a transaction belonging to the given user by
+// setting its StatusId to 3 (deleted).
+func DeleteTransaction(userID, id int) error {
 	query := `
 		UPDATE "Transactions"
 		SET "StatusId" = 3
-		WHERE "Id" = $1 AND "StatusId" = 1
+		WHERE "Id" = $1 AND "UserId" = $2 AND "StatusId" = 1
 	`
 
-	res, err := Pool.ExecContext(context.Background(), query, id)
+	res, err := Pool.ExecContext(context.Background(), query, id, userID)
 	if err != nil {
 		log.Println("Error executing query:", err)
 		return ErrDeleteObject("transação")

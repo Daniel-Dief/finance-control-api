@@ -36,6 +36,11 @@ type CategoryBody struct {
 //	@Router			/categories/list [get]
 func ListCategories(categoryGroup *echo.Group) {
 	categoryGroup.GET("/list", func(c *echo.Context) error {
+		userID, err := currentUserID(c)
+		if err != nil {
+			return c.JSON(http.StatusUnauthorized, map[string]interface{}{"error": err.Error()})
+		}
+
 		var params CategoryQueryParams
 		if !bindAndValidateQuery(c, &params) {
 			return nil
@@ -43,7 +48,7 @@ func ListCategories(categoryGroup *echo.Group) {
 
 		pag := parsePagination(params.Page, params.Limit)
 
-		categories, err := database.ListCategories(params.Name, pag)
+		categories, err := database.ListCategories(userID, params.Name, pag)
 
 		if err != nil {
 			return c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
@@ -71,12 +76,17 @@ func ListCategories(categoryGroup *echo.Group) {
 //	@Router			/categories/{id} [get]
 func GetCategoryByID(categoryGroup *echo.Group) {
 	categoryGroup.GET("/:id", func(c *echo.Context) error {
+		userID, err := currentUserID(c)
+		if err != nil {
+			return c.JSON(http.StatusUnauthorized, map[string]interface{}{"error": err.Error()})
+		}
+
 		var params PathIDParams
 		if !bindAndValidatePath(c, &params) {
 			return nil
 		}
 
-		category, err := database.GetCategoryByID(params.ID)
+		category, err := database.GetCategoryByID(userID, params.ID)
 
 		if errors.Is(err, database.ErrNotFound) {
 			return c.JSON(http.StatusNotFound, map[string]interface{}{"error": "Categoria não encontrada"})
@@ -99,18 +109,27 @@ func GetCategoryByID(categoryGroup *echo.Group) {
 //	@Param			body	body		CategoryBody	true	"Dados da nova categoria"
 //	@Success		201		{object}	models.Category
 //	@Failure		400		{object}		map[string]interface{}
+//	@Failure		409		{object}		map[string]string
 //	@Failure		500		{object}		map[string]string
 //	@Router			/categories/create [post]
 func CreateCategory(categoryGroup *echo.Group) {
 	categoryGroup.POST("/create", func(c *echo.Context) error {
+		userID, err := currentUserID(c)
+		if err != nil {
+			return c.JSON(http.StatusUnauthorized, map[string]interface{}{"error": err.Error()})
+		}
+
 		var body CategoryBody
 
 		if !bindAndValidate(c, &body) {
 			return nil
 		}
 
-		createdCategory, err := database.CreateCategory(body.Name)
+		createdCategory, err := database.CreateCategory(userID, body.Name)
 
+		if errors.Is(err, database.ErrDuplicateCategory) {
+			return c.JSON(http.StatusConflict, map[string]interface{}{"error": err.Error()})
+		}
 		if err != nil {
 			return c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
 		}
@@ -131,10 +150,16 @@ func CreateCategory(categoryGroup *echo.Group) {
 //	@Success		200		{object}	models.Category
 //	@Failure		400		{object}	map[string]interface{}
 //	@Failure		404		{object}	map[string]string
+//	@Failure		409		{object}	map[string]string
 //	@Failure		500		{object}	map[string]string
 //	@Router			/categories/{id} [put]
 func UpdateCategory(categoryGroup *echo.Group) {
 	categoryGroup.PUT("/:id", func(c *echo.Context) error {
+		userID, err := currentUserID(c)
+		if err != nil {
+			return c.JSON(http.StatusUnauthorized, map[string]interface{}{"error": err.Error()})
+		}
+
 		var params PathIDParams
 		if !bindAndValidatePath(c, &params) {
 			return nil
@@ -146,10 +171,13 @@ func UpdateCategory(categoryGroup *echo.Group) {
 			return nil
 		}
 
-		updatedCategory, err := database.UpdateCategory(params.ID, body.Name)
+		updatedCategory, err := database.UpdateCategory(userID, params.ID, body.Name)
 
 		if errors.Is(err, database.ErrNotFound) {
 			return c.JSON(http.StatusNotFound, map[string]interface{}{"error": "Categoria não encontrada"})
+		}
+		if errors.Is(err, database.ErrDuplicateCategory) {
+			return c.JSON(http.StatusConflict, map[string]interface{}{"error": err.Error()})
 		}
 		if err != nil {
 			return c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
@@ -174,12 +202,17 @@ func UpdateCategory(categoryGroup *echo.Group) {
 //	@Router			/categories/{id} [delete]
 func DeleteCategory(categoryGroup *echo.Group) {
 	categoryGroup.DELETE("/:id", func(c *echo.Context) error {
+		userID, err := currentUserID(c)
+		if err != nil {
+			return c.JSON(http.StatusUnauthorized, map[string]interface{}{"error": err.Error()})
+		}
+
 		var params PathIDParams
 		if !bindAndValidatePath(c, &params) {
 			return nil
 		}
 
-		err := database.DeleteCategory(params.ID)
+		err = database.DeleteCategory(userID, params.ID)
 		if errors.Is(err, database.ErrNotFound) {
 			return c.JSON(http.StatusNotFound, map[string]interface{}{"error": "Categoria não encontrada"})
 		}

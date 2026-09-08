@@ -19,6 +19,7 @@ type EnvConfig struct {
 	DBName      string `mapstructure:"DB_NAME"`
 	ENV         string `mapstructure:"ENV"`
 	FrontendURL string `mapstructure:"FRONTEND_URL"`
+	JWTSecret   string `mapstructure:"JWT_SECRET"`
 }
 
 // envOr returns the value of the environment variable named by key,
@@ -54,6 +55,7 @@ func CheckEnvs() error {
 		DBName:      envOr("DB_NAME", viper.GetString("DB_NAME")),
 		ENV:         envOr("ENV", viper.GetString("ENV")),
 		FrontendURL: envOr("FRONTEND_URL", viper.GetString("FRONTEND_URL")),
+		JWTSecret:   envOr("JWT_SECRET", viper.GetString("JWT_SECRET")),
 	}
 
 	return validate(&config)
@@ -65,6 +67,7 @@ func validate(cfg *EnvConfig) error {
 		"DB_USER":     cfg.DBUser,
 		"DB_PASSWORD": cfg.DBPassword,
 		"DB_NAME":     cfg.DBName,
+		"JWT_SECRET":  cfg.JWTSecret,
 	}
 
 	var missing []string

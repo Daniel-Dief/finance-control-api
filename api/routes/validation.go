@@ -3,6 +3,7 @@ package routes
 import (
 	"errors"
 	"finance-control-api/database"
+	"finance-control-api/middlewares"
 	"fmt"
 	"reflect"
 	"strconv"
@@ -12,6 +13,16 @@ import (
 )
 
 var validate = validator.New()
+
+// currentUserID returns the ID of the authenticated user stored in the
+// context by the JWT middleware.
+func currentUserID(c *echo.Context) (int, error) {
+	user, err := middlewares.GetCurrentUser(c)
+	if err != nil {
+		return 0, err
+	}
+	return user.ID, nil
+}
 
 // bindAndValidate binds the request body into the destination struct and
 // validates it according to the struct's `validate` tags. On failure it writes a
