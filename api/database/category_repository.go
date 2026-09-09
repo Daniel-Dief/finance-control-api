@@ -6,12 +6,16 @@ import (
 	"errors"
 	"finance-control-api/models"
 	"log"
+	"strings"
 )
 
 // ListCategories retrieves a paginated list of categories belonging to the
 // given user, optionally filtered by name. If name is empty, all categories
 // are returned.
-func ListCategories(userID int, name *string, pag Pagination) (*PaginatedResult[models.Category], error) {
+func ListCategories(userID int, name string, pag Pagination) (*PaginatedResult[models.Category], error) {
+	escaped := strings.ReplaceAll(name, "%", "\\%")
+	escaped = strings.ReplaceAll(escaped, "_", "\\_")
+
 	where := `
 		WHERE "StatusId" = $1 AND "UserId" = $2
 		AND ($3::text IS NULL OR "Name" ILIKE '%' || $3 || '%')
@@ -19,7 +23,7 @@ func ListCategories(userID int, name *string, pag Pagination) (*PaginatedResult[
 
 	var total int
 	if err := Pool.QueryRowContext(context.Background(),
-		`SELECT COUNT(*) FROM "Categories" `+where, StatusActive, userID, name).Scan(&total); err != nil {
+		`SELECT COUNT(*) FROM "Categories" `+where, StatusActive, userID, escaped).Scan(&total); err != nil {
 		log.Println("Error executing count query:", err)
 		return nil, ErrGenericDatabase
 	}

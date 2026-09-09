@@ -11,9 +11,9 @@ import (
 // CategoryQueryParams defines the query parameters accepted by ListCategories.
 // Pointer fields stay nil when the parameter is omitted.
 type CategoryQueryParams struct {
-	Name  *string `query:"name" validate:"omitempty"`
-	Page  *int    `query:"page" validate:"omitempty,min=1"`
-	Limit *int    `query:"limit" validate:"omitempty,min=1,max=100"`
+	Name  string `query:"name" validate:"omitempty"`
+	Page  *int   `query:"page" validate:"omitempty,min=1"`
+	Limit *int   `query:"limit" validate:"omitempty,min=1,max=100"`
 }
 
 // CategoryBody defines the JSON body accepted by CreateCategory and UpdateCategory.

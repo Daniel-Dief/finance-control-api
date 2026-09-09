@@ -6,11 +6,15 @@ import (
 	"errors"
 	"finance-control-api/models"
 	"log"
+	"strings"
 )
 
 // ListAreas retrieves a paginated list of areas belonging to the given user,
 // optionally filtered by name. If name is empty, all areas are returned.
 func ListAreas(userID int, name string, pag Pagination) (*PaginatedResult[models.Area], error) {
+	escaped := strings.ReplaceAll(name, "%", "\\%")
+	escaped = strings.ReplaceAll(escaped, "_", "\\_")
+
 	where := `
 		WHERE "StatusId" = $1 AND "UserId" = $2
 		AND ($3::text IS NULL OR "Name" ILIKE '%' || $3 || '%')
@@ -18,7 +22,7 @@ func ListAreas(userID int, name string, pag Pagination) (*PaginatedResult[models
 
 	var total int
 	if err := Pool.QueryRowContext(context.Background(),
-		`SELECT COUNT(*) FROM "Areas" `+where, StatusActive, userID, name).Scan(&total); err != nil {
+		`SELECT COUNT(*) FROM "Areas" `+where, StatusActive, userID, escaped).Scan(&total); err != nil {
 		log.Println("Error executing count query:", err)
 		return nil, ErrGenericDatabase
 	}
