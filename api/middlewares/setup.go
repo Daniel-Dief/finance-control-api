@@ -8,6 +8,7 @@ import (
 func BindMiddlewares(echoAPI *echo.Echo) {
 	echoAPI.Use(middleware.RequestLogger())
 	echoAPI.Use(middleware.Recover())
+	echoAPI.Use(middleware.BodyLimit(1 << 20)) // 1 MB
 
 	RatelimitMiddleware(echoAPI)
 }
