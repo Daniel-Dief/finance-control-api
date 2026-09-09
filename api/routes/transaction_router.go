@@ -154,6 +154,22 @@ func CreateTransaction(transactionGroup *echo.Group) {
 			return nil
 		}
 
+		_, err = database.GetCategoryByID(userID, body.CategoryID)
+		if errors.Is(err, database.ErrNotFound) {
+			return c.JSON(http.StatusBadRequest, map[string]interface{}{"error": "Categoria não encontrada ou não pertence ao usuário"})
+		}
+		if err != nil {
+			return c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
+		}
+
+		_, err = database.GetAreaByID(userID, body.AreaID)
+		if errors.Is(err, database.ErrNotFound) {
+			return c.JSON(http.StatusBadRequest, map[string]interface{}{"error": "Área não encontrada ou não pertence ao usuário"})
+		}
+		if err != nil {
+			return c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
+		}
+
 		props := database.TransactionProps{
 			Date:       &body.Date,
 			Amount:     &body.Amount,
@@ -202,6 +218,26 @@ func UpdateTransaction(transactionGroup *echo.Group) {
 
 		if !bindAndValidate(c, &body) {
 			return nil
+		}
+
+		if body.CategoryID != nil {
+			_, err = database.GetCategoryByID(userID, *body.CategoryID)
+			if errors.Is(err, database.ErrNotFound) {
+				return c.JSON(http.StatusBadRequest, map[string]interface{}{"error": "Categoria não encontrada ou não pertence ao usuário"})
+			}
+			if err != nil {
+				return c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
+			}
+		}
+
+		if body.AreaID != nil {
+			_, err = database.GetAreaByID(userID, *body.AreaID)
+			if errors.Is(err, database.ErrNotFound) {
+				return c.JSON(http.StatusBadRequest, map[string]interface{}{"error": "Área não encontrada ou não pertence ao usuário"})
+			}
+			if err != nil {
+				return c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
+			}
 		}
 
 		props := database.TransactionProps{
