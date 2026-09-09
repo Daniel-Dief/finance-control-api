@@ -59,11 +59,11 @@ func ListTransactions(userID int, filters TransactionFilters, pag Pagination) (*
 		return nil, ErrGenericDatabase
 	}
 
-	defer rows.Close()
 	if rows.Err() != nil {
 		log.Println("Error with rows:", rows.Err())
 		return nil, ErrProcessQuery
 	}
+	defer rows.Close()
 
 	result := make([]models.Transaction, 0)
 	for rows.Next() {
