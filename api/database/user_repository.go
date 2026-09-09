@@ -15,12 +15,12 @@ import (
 func CreateUser(name, login, passwordHash string) (models.User, error) {
 	query := `
 		INSERT INTO "Users" ("StatusId", "Name", "Login", "PasswordHash")
-		VALUES (1, $1, $2, $3)
+		VALUES ($1, $2, $3, $4)
 		RETURNING "Id", "Name", "Login", "PasswordHash"
 	`
 
 	var u models.User
-	err := Pool.QueryRowContext(context.Background(), query, name, login, passwordHash).Scan(
+	err := Pool.QueryRowContext(context.Background(), query, StatusActive, name, login, passwordHash).Scan(
 		&u.ID, &u.Name, &u.Login, &u.PasswordHash,
 	)
 
@@ -39,11 +39,11 @@ func GetUserByLogin(login string) (models.User, error) {
 	query := `
 		SELECT "Id", "Name", "Login", "PasswordHash"
 		FROM "Users"
-		WHERE "Login" = $1 AND "StatusId" = 1
+		WHERE "Login" = $1 AND "StatusId" = $2
 	`
 
 	var u models.User
-	err := Pool.QueryRowContext(context.Background(), query, login).Scan(
+	err := Pool.QueryRowContext(context.Background(), query, login, StatusActive).Scan(
 		&u.ID, &u.Name, &u.Login, &u.PasswordHash,
 	)
 
@@ -62,11 +62,11 @@ func GetUserByID(id int) (models.User, error) {
 	query := `
 		SELECT "Id", "Name", "Login", "PasswordHash"
 		FROM "Users"
-		WHERE "Id" = $1 AND "StatusId" = 1
+		WHERE "Id" = $1 AND "StatusId" = $2
 	`
 
 	var u models.User
-	err := Pool.QueryRowContext(context.Background(), query, id).Scan(
+	err := Pool.QueryRowContext(context.Background(), query, id, StatusActive).Scan(
 		&u.ID, &u.Name, &u.Login, &u.PasswordHash,
 	)
 

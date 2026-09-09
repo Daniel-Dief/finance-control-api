@@ -19,15 +19,15 @@ type BudgetProps struct {
 // filter by year, month and/or areaId.
 func ListBudgets(userID int, props BudgetProps, pag Pagination) (*PaginatedResult[models.Budget], error) {
 	where := `
-		WHERE "StatusId" = 1 AND "UserId" = $1
-		AND ($2::integer IS NULL OR "Year" = $2)
-		AND ($3::integer IS NULL OR "Month" = $3)
-		AND ($4::integer IS NULL OR "AreaId" = $4)
+		WHERE "StatusId" = $1 AND "UserId" = $2
+		AND ($3::integer IS NULL OR "Year" = $3)
+		AND ($4::integer IS NULL OR "Month" = $4)
+		AND ($5::integer IS NULL OR "AreaId" = $5)
 	`
 
 	var total int
 	if err := Pool.QueryRowContext(context.Background(),
-		`SELECT COUNT(*) FROM "MonthlyBudget" `+where, userID, props.Year, props.Month, props.AreaId).Scan(&total); err != nil {
+		`SELECT COUNT(*) FROM "MonthlyBudget" `+where, StatusActive, userID, props.Year, props.Month, props.AreaId).Scan(&total); err != nil {
 		log.Println("Error executing count query:", err)
 		return nil, ErrGenericDatabase
 	}
@@ -37,10 +37,10 @@ func ListBudgets(userID int, props BudgetProps, pag Pagination) (*PaginatedResul
 		FROM "MonthlyBudget"
 		` + where + `
 		ORDER BY "Id"
-		LIMIT $5 OFFSET $6
+		LIMIT $6 OFFSET $7
 	`
 
-	rows, err := Pool.QueryContext(context.Background(), query, userID, props.Year, props.Month, props.AreaId, pag.Limit, pag.Offset())
+	rows, err := Pool.QueryContext(context.Background(), query, StatusActive, userID, props.Year, props.Month, props.AreaId, pag.Limit, pag.Offset())
 	if err != nil {
 		log.Println("Error executing query:", err)
 		return nil, ErrGenericDatabase
@@ -71,11 +71,11 @@ func GetBudgetByID(userID, id int) (models.Budget, error) {
 	query := `
 		SELECT "Id", "Year", "Month", "AreaId", "Amount", "UserId"
 		FROM "MonthlyBudget"
-		WHERE "Id" = $1 AND "UserId" = $2 AND "StatusId" = 1
+		WHERE "Id" = $1 AND "UserId" = $2 AND "StatusId" = $3
 	`
 
 	var b models.Budget
-	err := Pool.QueryRowContext(context.Background(), query, id, userID).Scan(&b.ID, &b.Year, &b.Month, &b.AreaID, &b.Amount, &b.UserID)
+	err := Pool.QueryRowContext(context.Background(), query, id, userID, StatusActive).Scan(&b.ID, &b.Year, &b.Month, &b.AreaID, &b.Amount, &b.UserID)
 
 	if errors.Is(err, sql.ErrNoRows) {
 		return models.Budget{}, ErrNotFound
@@ -116,12 +116,12 @@ func UpdateBudget(userID, id int, budget BudgetProps) (models.Budget, error) {
 			"Month" = COALESCE($2, "Month"),
 			"AreaId" = COALESCE($3, "AreaId"),
 			"Amount" = COALESCE($4, "Amount")
-		WHERE "Id" = $5 AND "UserId" = $6 AND "StatusId" = 1
+		WHERE "Id" = $5 AND "UserId" = $6 AND "StatusId" = $7
 		RETURNING "Id", "Year", "Month", "AreaId", "Amount", "UserId"
 	`
 
 	var b models.Budget
-	err := Pool.QueryRowContext(context.Background(), query, budget.Year, budget.Month, budget.AreaId, budget.Amount, id, userID).Scan(&b.ID, &b.Year, &b.Month, &b.AreaID, &b.Amount, &b.UserID)
+	err := Pool.QueryRowContext(context.Background(), query, budget.Year, budget.Month, budget.AreaId, budget.Amount, id, userID, StatusActive).Scan(&b.ID, &b.Year, &b.Month, &b.AreaID, &b.Amount, &b.UserID)
 
 	if errors.Is(err, sql.ErrNoRows) {
 		return models.Budget{}, ErrNotFound
@@ -140,11 +140,11 @@ func UpdateBudget(userID, id int, budget BudgetProps) (models.Budget, error) {
 func DeleteBudget(userID, id int) error {
 	query := `
 		UPDATE "MonthlyBudget"
-		SET "StatusId" = 3
-		WHERE "Id" = $1 AND "UserId" = $2 AND "StatusId" = 1
+		SET "StatusId" = $3
+		WHERE "Id" = $1 AND "UserId" = $2 AND "StatusId" = $4
 	`
 
-	res, err := Pool.ExecContext(context.Background(), query, id, userID)
+	res, err := Pool.ExecContext(context.Background(), query, id, userID, StatusDeleted, StatusActive)
 	if err != nil {
 		log.Println("Error executing query:", err)
 		return ErrDeleteObject("orçamento")

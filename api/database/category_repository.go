@@ -13,13 +13,13 @@ import (
 // are returned.
 func ListCategories(userID int, name *string, pag Pagination) (*PaginatedResult[models.Category], error) {
 	where := `
-		WHERE "StatusId" = 1 AND "UserId" = $1
-		AND ($2::text IS NULL OR "Name" ILIKE '%' || $2 || '%')
+		WHERE "StatusId" = $1 AND "UserId" = $2
+		AND ($3::text IS NULL OR "Name" ILIKE '%' || $3 || '%')
 	`
 
 	var total int
 	if err := Pool.QueryRowContext(context.Background(),
-		`SELECT COUNT(*) FROM "Categories" `+where, userID, name).Scan(&total); err != nil {
+		`SELECT COUNT(*) FROM "Categories" `+where, StatusActive, userID, name).Scan(&total); err != nil {
 		log.Println("Error executing count query:", err)
 		return nil, ErrGenericDatabase
 	}
@@ -29,10 +29,10 @@ func ListCategories(userID int, name *string, pag Pagination) (*PaginatedResult[
 		FROM "Categories"
 		` + where + `
 		ORDER BY "Id"
-		LIMIT $3 OFFSET $4
+		LIMIT $4 OFFSET $5
 	`
 
-	rows, err := Pool.QueryContext(context.Background(), query, userID, name, pag.Limit, pag.Offset())
+	rows, err := Pool.QueryContext(context.Background(), query, StatusActive, userID, name, pag.Limit, pag.Offset())
 	if err != nil {
 		log.Println("Error executing query:", err)
 		return nil, ErrGenericDatabase
@@ -63,11 +63,11 @@ func GetCategoryByID(userID, id int) (models.Category, error) {
 	query := `
 		SELECT "Id", "Name", "UserId"
 		FROM "Categories"
-		WHERE "Id" = $1 AND "UserId" = $2 AND "StatusId" = 1
+		WHERE "Id" = $1 AND "UserId" = $2 AND "StatusId" = $3
 	`
 
 	var c models.Category
-	err := Pool.QueryRowContext(context.Background(), query, id, userID).Scan(&c.ID, &c.Name, &c.UserID)
+	err := Pool.QueryRowContext(context.Background(), query, id, userID, StatusActive).Scan(&c.ID, &c.Name, &c.UserID)
 
 	if errors.Is(err, sql.ErrNoRows) {
 		return models.Category{}, ErrNotFound
@@ -104,13 +104,13 @@ func CreateCategory(userID int, name string) (models.Category, error) {
 func UpdateCategory(userID, id int, name string) (models.Category, error) {
 	query := `
 		UPDATE "Categories"
-		SET "Name" = $3
-		WHERE "Id" = $1 AND "UserId" = $2 AND "StatusId" = 1
+		SET "Name" = $4
+		WHERE "Id" = $1 AND "UserId" = $2 AND "StatusId" = $3
 		RETURNING "Id", "Name", "UserId"
 	`
 
 	var c models.Category
-	err := Pool.QueryRowContext(context.Background(), query, id, userID, name).Scan(&c.ID, &c.Name, &c.UserID)
+	err := Pool.QueryRowContext(context.Background(), query, id, userID, StatusActive, name).Scan(&c.ID, &c.Name, &c.UserID)
 
 	if errors.Is(err, sql.ErrNoRows) {
 		return models.Category{}, ErrNotFound
@@ -129,11 +129,11 @@ func UpdateCategory(userID, id int, name string) (models.Category, error) {
 func DeleteCategory(userID, id int) error {
 	query := `
 		UPDATE "Categories"
-		SET "StatusId" = 3
-		WHERE "Id" = $1 AND "UserId" = $2 AND "StatusId" = 1
+		SET "StatusId" = $3
+		WHERE "Id" = $1 AND "UserId" = $2 AND "StatusId" = $4
 	`
 
-	res, err := Pool.ExecContext(context.Background(), query, id, userID)
+	res, err := Pool.ExecContext(context.Background(), query, id, userID, StatusDeleted, StatusActive)
 	if err != nil {
 		log.Println("Error executing query:", err)
 		return ErrDeleteObject("categoria")

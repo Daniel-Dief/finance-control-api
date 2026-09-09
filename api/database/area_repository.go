@@ -12,13 +12,13 @@ import (
 // optionally filtered by name. If name is empty, all areas are returned.
 func ListAreas(userID int, name string, pag Pagination) (*PaginatedResult[models.Area], error) {
 	where := `
-		WHERE "StatusId" = 1 AND "UserId" = $1
-		AND ($2::text IS NULL OR "Name" ILIKE '%' || $2 || '%')
+		WHERE "StatusId" = $1 AND "UserId" = $2
+		AND ($3::text IS NULL OR "Name" ILIKE '%' || $3 || '%')
 	`
 
 	var total int
 	if err := Pool.QueryRowContext(context.Background(),
-		`SELECT COUNT(*) FROM "Areas" `+where, userID, name).Scan(&total); err != nil {
+		`SELECT COUNT(*) FROM "Areas" `+where, StatusActive, userID, name).Scan(&total); err != nil {
 		log.Println("Error executing count query:", err)
 		return nil, ErrGenericDatabase
 	}
@@ -28,10 +28,10 @@ func ListAreas(userID int, name string, pag Pagination) (*PaginatedResult[models
 		FROM "Areas"
 		` + where + `
 		ORDER BY "Id"
-		LIMIT $3 OFFSET $4
+		LIMIT $4 OFFSET $5
 	`
 
-	rows, err := Pool.QueryContext(context.Background(), query, userID, name, pag.Limit, pag.Offset())
+	rows, err := Pool.QueryContext(context.Background(), query, StatusActive, userID, name, pag.Limit, pag.Offset())
 	if err != nil {
 		log.Println("Error executing query:", err)
 		return nil, ErrGenericDatabase
@@ -62,11 +62,11 @@ func GetAreaByID(userID, id int) (models.Area, error) {
 	query := `
 		SELECT "Id", "Name", "UserId"
 		FROM "Areas"
-		WHERE "Id" = $1 AND "UserId" = $2 AND "StatusId" = 1
+		WHERE "Id" = $1 AND "UserId" = $2 AND "StatusId" = $3
 	`
 
 	var a models.Area
-	err := Pool.QueryRowContext(context.Background(), query, id, userID).Scan(&a.ID, &a.Name, &a.UserID)
+	err := Pool.QueryRowContext(context.Background(), query, id, userID, StatusActive).Scan(&a.ID, &a.Name, &a.UserID)
 
 	if errors.Is(err, sql.ErrNoRows) {
 		return models.Area{}, ErrNotFound
@@ -102,13 +102,13 @@ func CreateArea(userID int, name string) (models.Area, error) {
 func UpdateArea(userID, id int, name string) (models.Area, error) {
 	query := `
 		UPDATE "Areas"
-		SET "Name" = $3
-		WHERE "Id" = $1 AND "UserId" = $2 AND "StatusId" = 1
+		SET "Name" = $4
+		WHERE "Id" = $1 AND "UserId" = $2 AND "StatusId" = $3
 		RETURNING "Id", "Name", "UserId"
 	`
 
 	var a models.Area
-	err := Pool.QueryRowContext(context.Background(), query, id, userID, name).Scan(&a.ID, &a.Name, &a.UserID)
+	err := Pool.QueryRowContext(context.Background(), query, id, userID, StatusActive, name).Scan(&a.ID, &a.Name, &a.UserID)
 
 	if errors.Is(err, sql.ErrNoRows) {
 		return models.Area{}, ErrNotFound
@@ -127,11 +127,11 @@ func UpdateArea(userID, id int, name string) (models.Area, error) {
 func DeleteArea(userID, id int) error {
 	query := `
 		UPDATE "Areas"
-		SET "StatusId" = 3
-		WHERE "Id" = $1 AND "UserId" = $2 AND "StatusId" = 1
+		SET "StatusId" = $3
+		WHERE "Id" = $1 AND "UserId" = $2 AND "StatusId" = $4
 	`
 
-	res, err := Pool.ExecContext(context.Background(), query, id, userID)
+	res, err := Pool.ExecContext(context.Background(), query, id, userID, StatusDeleted, StatusActive)
 	if err != nil {
 		log.Println("Error executing query:", err)
 		return ErrDeleteObject("área")
