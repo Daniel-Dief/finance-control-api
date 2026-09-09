@@ -20,3 +20,4 @@ EXPOSE 1323
 USER nonroot:nonroot
 
 ENTRYPOINT ["./finance-control-api"]
+
