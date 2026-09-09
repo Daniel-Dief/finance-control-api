@@ -147,3 +147,39 @@ CREATE INDEX idx_categories_user ON "Categories"("UserId");
 CREATE UNIQUE INDEX uq_areas_name_user ON "Areas"("Name", "UserId") WHERE "StatusId" = 1;
 CREATE UNIQUE INDEX uq_categories_name_user ON "Categories"("Name", "UserId") WHERE "StatusId" = 1;
 CREATE UNIQUE INDEX uq_budget_period_user ON "MonthlyBudget"("Year", "Month", "AreaId", "UserId") WHERE "StatusId" = 1;
+
+-- =========================
+-- Trigger: UpdateUpdatedAt
+-- =========================
+
+CREATE OR REPLACE FUNCTION update_updated_at()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW."UpdatedAt" = now();
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trg_status_updated_at
+    BEFORE UPDATE ON "Status"
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+
+CREATE TRIGGER trg_users_updated_at
+    BEFORE UPDATE ON "Users"
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+
+CREATE TRIGGER trg_categories_updated_at
+    BEFORE UPDATE ON "Categories"
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+
+CREATE TRIGGER trg_areas_updated_at
+    BEFORE UPDATE ON "Areas"
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+
+CREATE TRIGGER trg_budget_updated_at
+    BEFORE UPDATE ON "MonthlyBudget"
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+
+CREATE TRIGGER trg_transactions_updated_at
+    BEFORE UPDATE ON "Transactions"
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at();
