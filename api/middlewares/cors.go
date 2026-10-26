@@ -10,7 +10,6 @@ import (
 
 func CorsMiddleware(echoAPI *echo.Echo) {
 	config := middleware.CORSConfig{
-		AllowOrigins:     []string{"*"},
 		AllowCredentials: true,
 		AllowMethods:     []string{http.MethodGet, http.MethodPost, http.MethodPut, http.MethodDelete},
 		AllowHeaders:     []string{echo.HeaderOrigin, echo.HeaderContentType, echo.HeaderAccept, echo.HeaderAuthorization},
@@ -18,6 +17,10 @@ func CorsMiddleware(echoAPI *echo.Echo) {
 
 	if os.Getenv("ENV") == "production" {
 		config.AllowOrigins = []string{os.Getenv("FRONTEND_URL")}
+	} else {
+		config.UnsafeAllowOriginFunc = func(c *echo.Context, origin string) (string, bool, error) {
+			return origin, true, nil
+		}
 	}
 
 	echoAPI.Use(middleware.CORSWithConfig(config))

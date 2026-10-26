@@ -10,5 +10,6 @@ func BindMiddlewares(echoAPI *echo.Echo) {
 	echoAPI.Use(middleware.Recover())
 	echoAPI.Use(middleware.BodyLimit(1 << 20)) // 1 MB
 
+	CorsMiddleware(echoAPI)
 	RatelimitMiddleware(echoAPI)
 }

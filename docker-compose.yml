@@ -27,7 +27,7 @@ services:
       - ./migrations:/migrations
     command: >
       -dir /migrations postgres
-      "postgres://${DB_USER}:${DB_PASSWORD}@postgres:5432/${DB_NAME}?sslmode=disable"
+      "postgres://${DB_USER}:${DB_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}?sslmode=disable"
       up
 
   api:
