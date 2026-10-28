@@ -84,6 +84,36 @@ definitions:
       year:
         type: integer
     type: object
+  models.BudgetProgress:
+    properties:
+      amount:
+        type: integer
+      area_id:
+        type: integer
+      area_name:
+        type: string
+      exceeded:
+        type: boolean
+      id:
+        type: integer
+      percentage:
+        type: number
+      remaining:
+        type: integer
+      spent:
+        type: integer
+    type: object
+  models.BudgetReport:
+    properties:
+      budgets:
+        items:
+          $ref: '#/definitions/models.BudgetProgress'
+        type: array
+      month:
+        type: integer
+      year:
+        type: integer
+    type: object
   models.Category:
     properties:
       id:
@@ -91,6 +121,71 @@ definitions:
       name:
         type: string
       user_id:
+        type: integer
+    type: object
+  models.LineChart:
+    properties:
+      history_months:
+        type: integer
+      month:
+        type: integer
+      points:
+        items:
+          $ref: '#/definitions/models.LineChartPoint'
+        type: array
+      type:
+        type: string
+      year:
+        type: integer
+    type: object
+  models.LineChartPoint:
+    properties:
+      date:
+        type: string
+      day:
+        type: integer
+      median:
+        type: integer
+      value:
+        type: integer
+    type: object
+  models.RadarArea:
+    properties:
+      area_id:
+        type: integer
+      area_name:
+        type: string
+      median:
+        type: integer
+      value:
+        type: integer
+    type: object
+  models.RadarChart:
+    properties:
+      areas:
+        items:
+          $ref: '#/definitions/models.RadarArea'
+        type: array
+      history_months:
+        type: integer
+      month:
+        type: integer
+      type:
+        type: string
+      year:
+        type: integer
+    type: object
+  models.ReportKPIs:
+    properties:
+      balance:
+        type: integer
+      expense:
+        type: integer
+      income:
+        type: integer
+      month:
+        type: integer
+      year:
         type: integer
     type: object
   models.Transaction:
@@ -940,6 +1035,181 @@ paths:
       summary: Listar categorias
       tags:
       - categories
+  /reports/budgets:
+    get:
+      consumes:
+      - application/json
+      description: Retorna progresso dos orçamentos do mês para áreas ativas.
+      parameters:
+      - description: Ano (padrão mês atual)
+        in: query
+        name: year
+        type: integer
+      - description: Mês (1-12, padrão mês atual)
+        in: query
+        name: month
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.BudgetReport'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Relatório - Orçamentos
+      tags:
+      - reports
+  /reports/kpis:
+    get:
+      consumes:
+      - application/json
+      description: Retorna entradas, saídas e saldo do mês.
+      parameters:
+      - description: Ano (padrão mês atual)
+        in: query
+        name: year
+        type: integer
+      - description: Mês (1-12, padrão mês atual)
+        in: query
+        name: month
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.ReportKPIs'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Relatório - KPIs
+      tags:
+      - reports
+  /reports/line-chart:
+    get:
+      consumes:
+      - application/json
+      description: Retorna um ponto por dia do mês com valor e mediana dos últimos
+        6 meses.
+      parameters:
+      - description: Ano (padrão mês atual)
+        in: query
+        name: year
+        type: integer
+      - description: Mês (1-12, padrão mês atual)
+        in: query
+        name: month
+        type: integer
+      - description: Tipo (income ou expense, padrão expense)
+        enum:
+        - income
+        - expense
+        in: query
+        name: type
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.LineChart'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Relatório - Gráfico de linha
+      tags:
+      - reports
+  /reports/radar-chart:
+    get:
+      consumes:
+      - application/json
+      description: Retorna valor e mediana por área ativa.
+      parameters:
+      - description: Ano (padrão mês atual)
+        in: query
+        name: year
+        type: integer
+      - description: Mês (1-12, padrão mês atual)
+        in: query
+        name: month
+        type: integer
+      - description: Tipo (income ou expense, padrão expense)
+        enum:
+        - income
+        - expense
+        in: query
+        name: type
+        type: string
+      - description: Lista de IDs de áreas separadas por vírgula
+        in: query
+        name: area_ids
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.RadarChart'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Relatório - Gráfico de radar
+      tags:
+      - reports
   /transactions/{id}:
     delete:
       consumes:

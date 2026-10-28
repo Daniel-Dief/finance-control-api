@@ -22,17 +22,19 @@ func BindRoutes(echoAPI *echo.Echo) {
 	Register(authGroup)
 	Login(authGroup)
 
-	// Create route groups for areas, budgets, categories, and transactions
+	// Create route groups for areas, budgets, categories, transactions, and reports
 	areaGroup := echoAPI.Group("/areas")
 	budgetGroup := echoAPI.Group("/budgets")
 	categoryGroup := echoAPI.Group("/categories")
 	transactionGroup := echoAPI.Group("/transactions")
+	reportGroup := echoAPI.Group("/reports")
 
 	// Apply JWT middleware to resource groups
 	areaGroup.Use(middlewares.JWTMiddleware())
 	budgetGroup.Use(middlewares.JWTMiddleware())
 	categoryGroup.Use(middlewares.JWTMiddleware())
 	transactionGroup.Use(middlewares.JWTMiddleware())
+	reportGroup.Use(middlewares.JWTMiddleware())
 
 	// Bind area routes
 	ListAreas(areaGroup)
@@ -61,6 +63,12 @@ func BindRoutes(echoAPI *echo.Echo) {
 	CreateTransaction(transactionGroup)
 	UpdateTransaction(transactionGroup)
 	DeleteTransaction(transactionGroup)
+
+	// Bind report routes
+	GetKPIs(reportGroup)
+	GetLineChart(reportGroup)
+	GetRadarChart(reportGroup)
+	GetBudgetReport(reportGroup)
 }
 
 func HealthCheck(echoAPI *echo.Echo) {

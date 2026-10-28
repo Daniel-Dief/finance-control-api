@@ -138,6 +138,15 @@ Os testes usam **testcontainers** para criar um container PostgreSQL efêmero. N
 | `PUT` | `/transactions/:id` | Atualizar transação |
 | `DELETE` | `/transactions/:id` | Excluir transação (soft delete) |
 
+### 📈 Relatórios (requer JWT)
+
+| Método | Rota | Descrição |
+|---|---|---|
+| `GET` | `/reports/kpis?year=&month=` | Entradas, saídas e saldo do mês (`income - expense`). Se `year/month` omitidos, usa o mês atual. |
+| `GET` | `/reports/line-chart?year=&month=&type=` | Um ponto por dia do mês com `value` e `median` (últimos 6 meses, mesmo dia). `type` padrão `expense`. |
+| `GET` | `/reports/radar-chart?year=&month=&type=&area_ids=` | Valor e mediana por área ativa. `area_ids` opcional, separado por vírgula. `type` padrão `expense`. |
+| `GET` | `/reports/budgets?year=&month=` | Progresso de orçamentos das áreas ativas no mês (só despesas, estouro explícito). |
+
 ### 📄 Paginação
 
 Todas as rotas `list` aceitam parâmetros de query:
