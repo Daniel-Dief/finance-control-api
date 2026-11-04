@@ -1,0 +1,1426 @@
+basePath: /
+definitions:
+  database.PaginatedResult-models_Area:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/models.Area'
+        type: array
+      limit:
+        type: integer
+      page:
+        type: integer
+      total:
+        type: integer
+      total_pages:
+        type: integer
+    type: object
+  database.PaginatedResult-models_Budget:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/models.Budget'
+        type: array
+      limit:
+        type: integer
+      page:
+        type: integer
+      total:
+        type: integer
+      total_pages:
+        type: integer
+    type: object
+  database.PaginatedResult-models_Category:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/models.Category'
+        type: array
+      limit:
+        type: integer
+      page:
+        type: integer
+      total:
+        type: integer
+      total_pages:
+        type: integer
+    type: object
+  database.PaginatedResult-models_Transaction:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/models.Transaction'
+        type: array
+      limit:
+        type: integer
+      page:
+        type: integer
+      total:
+        type: integer
+      total_pages:
+        type: integer
+    type: object
+  models.Area:
+    properties:
+      id:
+        type: integer
+      name:
+        type: string
+      user_id:
+        type: integer
+    type: object
+  models.Budget:
+    properties:
+      amount:
+        type: integer
+      area_id:
+        type: integer
+      id:
+        type: integer
+      month:
+        type: integer
+      user_id:
+        type: integer
+      year:
+        type: integer
+    type: object
+  models.BudgetProgress:
+    properties:
+      amount:
+        type: integer
+      area_id:
+        type: integer
+      area_name:
+        type: string
+      exceeded:
+        type: boolean
+      id:
+        type: integer
+      percentage:
+        type: number
+      remaining:
+        type: integer
+      spent:
+        type: integer
+    type: object
+  models.BudgetReport:
+    properties:
+      budgets:
+        items:
+          $ref: '#/definitions/models.BudgetProgress'
+        type: array
+      month:
+        type: integer
+      year:
+        type: integer
+    type: object
+  models.Category:
+    properties:
+      id:
+        type: integer
+      name:
+        type: string
+      user_id:
+        type: integer
+    type: object
+  models.LineChart:
+    properties:
+      history_months:
+        type: integer
+      month:
+        type: integer
+      points:
+        items:
+          $ref: '#/definitions/models.LineChartPoint'
+        type: array
+      type:
+        type: string
+      year:
+        type: integer
+    type: object
+  models.LineChartPoint:
+    properties:
+      date:
+        type: string
+      day:
+        type: integer
+      median:
+        type: integer
+      value:
+        type: integer
+    type: object
+  models.RadarArea:
+    properties:
+      area_id:
+        type: integer
+      area_name:
+        type: string
+      median:
+        type: integer
+      value:
+        type: integer
+    type: object
+  models.RadarChart:
+    properties:
+      areas:
+        items:
+          $ref: '#/definitions/models.RadarArea'
+        type: array
+      history_months:
+        type: integer
+      month:
+        type: integer
+      type:
+        type: string
+      year:
+        type: integer
+    type: object
+  models.ReportKPIs:
+    properties:
+      balance:
+        type: integer
+      expense:
+        type: integer
+      income:
+        type: integer
+      month:
+        type: integer
+      year:
+        type: integer
+    type: object
+  models.Transaction:
+    properties:
+      amount:
+        type: integer
+      area_id:
+        type: integer
+      category_id:
+        type: integer
+      date:
+        type: string
+      id:
+        type: integer
+      type:
+        description: '''income'' or ''expense'''
+        type: string
+      user_id:
+        type: integer
+    type: object
+  routes.AreaBody:
+    properties:
+      name:
+        type: string
+    required:
+    - name
+    type: object
+  routes.BudgetBody:
+    properties:
+      amount:
+        type: integer
+      area_id:
+        type: integer
+      month:
+        maximum: 12
+        minimum: 1
+        type: integer
+      year:
+        minimum: 1
+        type: integer
+    required:
+    - area_id
+    - month
+    - year
+    type: object
+  routes.BudgetUpdateBody:
+    properties:
+      amount:
+        type: integer
+      area_id:
+        type: integer
+      month:
+        maximum: 12
+        minimum: 1
+        type: integer
+      year:
+        minimum: 1
+        type: integer
+    type: object
+  routes.CategoryBody:
+    properties:
+      name:
+        type: string
+    required:
+    - name
+    type: object
+  routes.LoginBody:
+    properties:
+      login:
+        type: string
+      password:
+        type: string
+    required:
+    - login
+    - password
+    type: object
+  routes.LoginResponse:
+    properties:
+      token:
+        type: string
+      user:
+        $ref: '#/definitions/routes.UserPayload'
+    type: object
+  routes.RegisterBody:
+    properties:
+      login:
+        type: string
+      name:
+        type: string
+      password:
+        minLength: 6
+        type: string
+    required:
+    - login
+    - name
+    - password
+    type: object
+  routes.TransactionBody:
+    properties:
+      amount:
+        type: integer
+      area_id:
+        type: integer
+      category_id:
+        type: integer
+      date:
+        type: string
+      type:
+        enum:
+        - income
+        - expense
+        type: string
+    required:
+    - amount
+    - area_id
+    - category_id
+    - date
+    - type
+    type: object
+  routes.TransactionUpdateBody:
+    properties:
+      amount:
+        type: integer
+      area_id:
+        type: integer
+      category_id:
+        type: integer
+      date:
+        type: string
+      type:
+        enum:
+        - income
+        - expense
+        type: string
+    type: object
+  routes.UserPayload:
+    properties:
+      id:
+        type: integer
+      login:
+        type: string
+      name:
+        type: string
+    type: object
+host: localhost:1323
+info:
+  contact: {}
+  description: API para gerenciamento financeiro pessoal — áreas, categorias, orçamentos
+    e transações.
+  title: Finance Control API
+  version: "1.0"
+paths:
+  /areas/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Remove uma área a partir do seu identificador.
+      parameters:
+      - description: ID da área
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Excluir área
+      tags:
+      - areas
+    get:
+      consumes:
+      - application/json
+      description: Retorna os dados de uma área a partir do seu identificador.
+      parameters:
+      - description: ID da área
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Area'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Obter área por ID
+      tags:
+      - areas
+    put:
+      consumes:
+      - application/json
+      description: Atualiza o nome de uma área existente identificada pelo ID.
+      parameters:
+      - description: ID da área
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Novos dados da área
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/routes.AreaBody'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Area'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "409":
+          description: Conflict
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Atualizar área
+      tags:
+      - areas
+  /areas/create:
+    post:
+      consumes:
+      - application/json
+      description: Cria uma nova área a partir do nome informado no corpo da requisição.
+      parameters:
+      - description: Dados da nova área
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/routes.AreaBody'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.Area'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "409":
+          description: Conflict
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Criar área
+      tags:
+      - areas
+  /areas/list:
+    get:
+      consumes:
+      - application/json
+      description: Retorna a lista de todas as áreas cadastradas, com filtro opcional
+        por nome.
+      parameters:
+      - description: Filtro por nome da área
+        in: query
+        name: name
+        type: string
+      - description: Número da página (padrão 1)
+        in: query
+        name: page
+        type: integer
+      - description: Quantidade por página (padrão 50, máximo 100)
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/database.PaginatedResult-models_Area'
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Listar áreas
+      tags:
+      - areas
+  /auth/login:
+    post:
+      consumes:
+      - application/json
+      description: Valida login e senha e retorna um token JWT com o identificador
+        do usuário.
+      parameters:
+      - description: Credenciais do usuário
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/routes.LoginBody'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/routes.LoginResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Autenticar usuário
+      tags:
+      - auth
+  /auth/register:
+    post:
+      consumes:
+      - application/json
+      description: Cria um novo usuário com status ativo. O login deve ser único e
+        a senha precisa de no mínimo 6 caracteres.
+      parameters:
+      - description: Dados do novo usuário
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/routes.RegisterBody'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/routes.UserPayload'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "409":
+          description: Conflict
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Criar usuário
+      tags:
+      - auth
+  /budgets/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Remove um orçamento a partir do seu identificador.
+      parameters:
+      - description: ID do orçamento
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Excluir orçamento
+      tags:
+      - budgets
+    get:
+      consumes:
+      - application/json
+      description: Retorna os dados de um orçamento a partir do seu identificador.
+      parameters:
+      - description: ID do orçamento
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Budget'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Obter orçamento por ID
+      tags:
+      - budgets
+    put:
+      consumes:
+      - application/json
+      description: Atualiza os campos de um orçamento existente. Apenas os campos
+        informados serão alterados.
+      parameters:
+      - description: ID do orçamento
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Campos a atualizar
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/routes.BudgetUpdateBody'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Budget'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "409":
+          description: Conflict
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Atualizar orçamento
+      tags:
+      - budgets
+  /budgets/create:
+    post:
+      consumes:
+      - application/json
+      description: Cria um novo orçamento a partir dos dados informados no corpo da
+        requisição.
+      parameters:
+      - description: Dados do novo orçamento
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/routes.BudgetBody'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.Budget'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "409":
+          description: Conflict
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Criar orçamento
+      tags:
+      - budgets
+  /budgets/list:
+    get:
+      consumes:
+      - application/json
+      description: Retorna a lista de orçamentos, com filtros opcionais por ano, mês
+        e área.
+      parameters:
+      - description: Filtro por ano
+        in: query
+        name: year
+        type: integer
+      - description: Filtro por mês (1-12)
+        in: query
+        name: month
+        type: integer
+      - description: Filtro por ID da área
+        in: query
+        name: area_id
+        type: integer
+      - description: Número da página (padrão 1)
+        in: query
+        name: page
+        type: integer
+      - description: Quantidade por página (padrão 50, máximo 100)
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/database.PaginatedResult-models_Budget'
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Listar orçamentos
+      tags:
+      - budgets
+  /categories/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Remove uma categoria a partir do seu identificador.
+      parameters:
+      - description: ID da categoria
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Excluir categoria
+      tags:
+      - categories
+    get:
+      consumes:
+      - application/json
+      description: Retorna os dados de uma categoria a partir do seu identificador.
+      parameters:
+      - description: ID da categoria
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Category'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Obter categoria por ID
+      tags:
+      - categories
+    put:
+      consumes:
+      - application/json
+      description: Atualiza o nome de uma categoria existente identificada pelo ID.
+      parameters:
+      - description: ID da categoria
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Novos dados da categoria
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/routes.CategoryBody'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Category'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "409":
+          description: Conflict
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Atualizar categoria
+      tags:
+      - categories
+  /categories/create:
+    post:
+      consumes:
+      - application/json
+      description: Cria uma nova categoria a partir do nome informado no corpo da
+        requisição.
+      parameters:
+      - description: Dados da nova categoria
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/routes.CategoryBody'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.Category'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "409":
+          description: Conflict
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Criar categoria
+      tags:
+      - categories
+  /categories/list:
+    get:
+      consumes:
+      - application/json
+      description: Retorna a lista de categorias cadastradas, com filtro opcional
+        por nome.
+      parameters:
+      - description: Filtro por nome da categoria
+        in: query
+        name: name
+        type: string
+      - description: Número da página (padrão 1)
+        in: query
+        name: page
+        type: integer
+      - description: Quantidade por página (padrão 50, máximo 100)
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/database.PaginatedResult-models_Category'
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Listar categorias
+      tags:
+      - categories
+  /reports/budgets:
+    get:
+      consumes:
+      - application/json
+      description: Retorna progresso dos orçamentos do mês para áreas ativas.
+      parameters:
+      - description: Ano (padrão mês atual)
+        in: query
+        name: year
+        type: integer
+      - description: Mês (1-12, padrão mês atual)
+        in: query
+        name: month
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.BudgetReport'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Relatório - Orçamentos
+      tags:
+      - reports
+  /reports/kpis:
+    get:
+      consumes:
+      - application/json
+      description: Retorna entradas, saídas e saldo do mês.
+      parameters:
+      - description: Ano (padrão mês atual)
+        in: query
+        name: year
+        type: integer
+      - description: Mês (1-12, padrão mês atual)
+        in: query
+        name: month
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.ReportKPIs'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Relatório - KPIs
+      tags:
+      - reports
+  /reports/line-chart:
+    get:
+      consumes:
+      - application/json
+      description: Retorna um ponto por dia do mês com valor e mediana dos últimos
+        6 meses.
+      parameters:
+      - description: Ano (padrão mês atual)
+        in: query
+        name: year
+        type: integer
+      - description: Mês (1-12, padrão mês atual)
+        in: query
+        name: month
+        type: integer
+      - description: Tipo (income ou expense, padrão expense)
+        enum:
+        - income
+        - expense
+        in: query
+        name: type
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.LineChart'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Relatório - Gráfico de linha
+      tags:
+      - reports
+  /reports/radar-chart:
+    get:
+      consumes:
+      - application/json
+      description: Retorna valor e mediana por área ativa.
+      parameters:
+      - description: Ano (padrão mês atual)
+        in: query
+        name: year
+        type: integer
+      - description: Mês (1-12, padrão mês atual)
+        in: query
+        name: month
+        type: integer
+      - description: Tipo (income ou expense, padrão expense)
+        enum:
+        - income
+        - expense
+        in: query
+        name: type
+        type: string
+      - description: Lista de IDs de áreas separadas por vírgula
+        in: query
+        name: area_ids
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.RadarChart'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Relatório - Gráfico de radar
+      tags:
+      - reports
+  /transactions/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Remove uma transação a partir do seu identificador.
+      parameters:
+      - description: ID da transação
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Excluir transação
+      tags:
+      - transactions
+    get:
+      consumes:
+      - application/json
+      description: Retorna os dados de uma transação a partir do seu identificador.
+      parameters:
+      - description: ID da transação
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Transaction'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Obter transação por ID
+      tags:
+      - transactions
+    put:
+      consumes:
+      - application/json
+      description: Atualiza os campos de uma transação existente. Apenas os campos
+        informados serão alterados.
+      parameters:
+      - description: ID da transação
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Campos a atualizar
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/routes.TransactionUpdateBody'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Transaction'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Atualizar transação
+      tags:
+      - transactions
+  /transactions/create:
+    post:
+      consumes:
+      - application/json
+      description: Cria uma nova transação (receita ou despesa) a partir dos dados
+        informados.
+      parameters:
+      - description: Dados da nova transação
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/routes.TransactionBody'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.Transaction'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Criar transação
+      tags:
+      - transactions
+  /transactions/list:
+    get:
+      consumes:
+      - application/json
+      description: Retorna a lista de transações, com filtros opcionais por tipo,
+        categoria, área e período.
+      parameters:
+      - description: Filtro por tipo (income ou expense)
+        enum:
+        - income
+        - expense
+        in: query
+        name: type
+        type: string
+      - description: Filtro por ID da categoria
+        in: query
+        name: category_id
+        type: integer
+      - description: Filtro por ID da área
+        in: query
+        name: area_id
+        type: integer
+      - description: Data inicial (AAAA-MM-DD)
+        format: "2006-01-02"
+        in: query
+        name: from
+        type: string
+      - description: Data final (AAAA-MM-DD)
+        format: "2006-01-02"
+        in: query
+        name: to
+        type: string
+      - description: Número da página (padrão 1)
+        in: query
+        name: page
+        type: integer
+      - description: Quantidade por página (padrão 50, máximo 100)
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/database.PaginatedResult-models_Transaction'
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Listar transações
+      tags:
+      - transactions
+swagger: "2.0"
