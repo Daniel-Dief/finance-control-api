@@ -14,6 +14,8 @@ services:
       interval: 5s
       timeout: 5s
       retries: 10
+    networks:
+      - finance-control-network
 
   migrate:
     build:
@@ -29,6 +31,8 @@ services:
       -dir /migrations postgres
       "postgres://${DB_USER}:${DB_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}?sslmode=disable"
       up
+    networks:
+      - finance-control-network
 
   api:
     container_name: finance-control-api
