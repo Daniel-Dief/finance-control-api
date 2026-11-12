@@ -252,16 +252,6 @@ definitions:
     required:
     - name
     type: object
-  routes.LoginBody:
-    properties:
-      login:
-        type: string
-      password:
-        type: string
-    required:
-    - login
-    - password
-    type: object
   routes.LoginResponse:
     properties:
       token:
@@ -542,17 +532,15 @@ paths:
       - areas
   /auth/login:
     post:
-      consumes:
-      - application/json
-      description: Valida login e senha e retorna um token JWT com o identificador
-        do usuário.
+      description: Valida as credenciais enviadas no header Authorization, no formato
+        Basic base64(usuario:senha), e retorna um token JWT com o identificador do
+        usuário.
       parameters:
-      - description: Credenciais do usuário
-        in: body
-        name: body
+      - description: Credenciais no formato Basic base64(usuario:senha)
+        in: header
+        name: authorization
         required: true
-        schema:
-          $ref: '#/definitions/routes.LoginBody'
+        type: string
       produces:
       - application/json
       responses:

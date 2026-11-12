@@ -320,10 +320,7 @@ const docTemplate = `{
         },
         "/auth/login": {
             "post": {
-                "description": "Valida login e senha e retorna um token JWT com o identificador do usuário.",
-                "consumes": [
-                    "application/json"
-                ],
+                "description": "Valida as credenciais enviadas no header Authorization, no formato Basic base64(usuario:senha), e retorna um token JWT com o identificador do usuário.",
                 "produces": [
                     "application/json"
                 ],
@@ -333,13 +330,11 @@ const docTemplate = `{
                 "summary": "Autenticar usuário",
                 "parameters": [
                     {
-                        "description": "Credenciais do usuário",
-                        "name": "body",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/routes.LoginBody"
-                        }
+                        "type": "string",
+                        "description": "Credenciais no formato Basic base64(usuario:senha)",
+                        "name": "authorization",
+                        "in": "header",
+                        "required": true
                     }
                 ],
                 "responses": {
@@ -2008,21 +2003,6 @@ const docTemplate = `{
             ],
             "properties": {
                 "name": {
-                    "type": "string"
-                }
-            }
-        },
-        "routes.LoginBody": {
-            "type": "object",
-            "required": [
-                "login",
-                "password"
-            ],
-            "properties": {
-                "login": {
-                    "type": "string"
-                },
-                "password": {
                     "type": "string"
                 }
             }

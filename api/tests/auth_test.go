@@ -1,8 +1,8 @@
 package tests
 
 import (
+	"encoding/base64"
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -14,12 +14,18 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestLoginSuccess(t *testing.T) {
-	e := setupEcho()
+// basicAuthHeader builds the Authorization header value from the given
+// credentials encoded as base64(usuario:senha).
+func basicAuthHeader(login, password string) string {
+	return "Basic " + base64.StdEncoding.EncodeToString([]byte(login+":"+password))
+}
 
-	body := fmt.Sprintf(`{"login":"%s","password":"%s"}`, testUserLogin, testUserPassword)
-	req := httptest.NewRequest(http.MethodPost, "/auth/login", strings.NewReader(body))
-	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+func TestLoginSuccess(t *testing.T) {
+	e := echo.New()
+	routes.BindRoutes(e)
+
+	req := httptest.NewRequest(http.MethodPost, "/auth/login", nil)
+	req.Header.Set(echo.HeaderAuthorization, basicAuthHeader(testUserLogin, testUserPassword))
 	rec := httptest.NewRecorder()
 
 	e.ServeHTTP(rec, req)
@@ -40,12 +46,26 @@ func TestLoginSuccess(t *testing.T) {
 	assert.Equal(t, testUserLogin, response.User.Login)
 }
 
-func TestLoginWrongPassword(t *testing.T) {
-	e := setupEcho()
+func TestLoginSuccessWithRawBase64(t *testing.T) {
+	e := echo.New()
+	routes.BindRoutes(e)
 
-	body := fmt.Sprintf(`{"login":"%s","password":"wrong"}`, testUserLogin)
-	req := httptest.NewRequest(http.MethodPost, "/auth/login", strings.NewReader(body))
-	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+	credentials := base64.StdEncoding.EncodeToString([]byte(testUserLogin + ":" + testUserPassword))
+	req := httptest.NewRequest(http.MethodPost, "/auth/login", nil)
+	req.Header.Set(echo.HeaderAuthorization, credentials)
+	rec := httptest.NewRecorder()
+
+	e.ServeHTTP(rec, req)
+
+	assert.Equal(t, http.StatusOK, rec.Code)
+}
+
+func TestLoginWrongPassword(t *testing.T) {
+	e := echo.New()
+	routes.BindRoutes(e)
+
+	req := httptest.NewRequest(http.MethodPost, "/auth/login", nil)
+	req.Header.Set(echo.HeaderAuthorization, basicAuthHeader(testUserLogin, "wrong"))
 	rec := httptest.NewRecorder()
 
 	e.ServeHTTP(rec, req)
@@ -54,11 +74,11 @@ func TestLoginWrongPassword(t *testing.T) {
 }
 
 func TestLoginUnknownUser(t *testing.T) {
-	e := setupEcho()
+	e := echo.New()
+	routes.BindRoutes(e)
 
-	body := `{"login":"unknown","password":"password"}`
-	req := httptest.NewRequest(http.MethodPost, "/auth/login", strings.NewReader(body))
-	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+	req := httptest.NewRequest(http.MethodPost, "/auth/login", nil)
+	req.Header.Set(echo.HeaderAuthorization, basicAuthHeader("unknown", "password"))
 	rec := httptest.NewRecorder()
 
 	e.ServeHTTP(rec, req)
@@ -66,12 +86,37 @@ func TestLoginUnknownUser(t *testing.T) {
 	assert.Equal(t, http.StatusUnauthorized, rec.Code)
 }
 
-func TestLoginMissingFields(t *testing.T) {
-	e := setupEcho()
+func TestLoginMissingAuthorization(t *testing.T) {
+	e := echo.New()
+	routes.BindRoutes(e)
 
-	body := `{"login":"","password":""}`
-	req := httptest.NewRequest(http.MethodPost, "/auth/login", strings.NewReader(body))
-	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+	req := httptest.NewRequest(http.MethodPost, "/auth/login", nil)
+	rec := httptest.NewRecorder()
+
+	e.ServeHTTP(rec, req)
+
+	assert.Equal(t, http.StatusBadRequest, rec.Code)
+}
+
+func TestLoginMalformedAuthorization(t *testing.T) {
+	e := echo.New()
+	routes.BindRoutes(e)
+
+	req := httptest.NewRequest(http.MethodPost, "/auth/login", nil)
+	req.Header.Set(echo.HeaderAuthorization, "Basic not-base64")
+	rec := httptest.NewRecorder()
+
+	e.ServeHTTP(rec, req)
+
+	assert.Equal(t, http.StatusBadRequest, rec.Code)
+}
+
+func TestLoginMissingPassword(t *testing.T) {
+	e := echo.New()
+	routes.BindRoutes(e)
+
+	req := httptest.NewRequest(http.MethodPost, "/auth/login", nil)
+	req.Header.Set(echo.HeaderAuthorization, basicAuthHeader(testUserLogin, ""))
 	rec := httptest.NewRecorder()
 
 	e.ServeHTTP(rec, req)

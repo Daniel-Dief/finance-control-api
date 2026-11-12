@@ -1,22 +1,18 @@
 package routes
 
 import (
+	"encoding/base64"
 	"errors"
 	"finance-control-api/database"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/labstack/echo/v5"
 	"golang.org/x/crypto/bcrypt"
 )
-
-// LoginBody defines the JSON body accepted by Login.
-type LoginBody struct {
-	Login    string `json:"login" validate:"required"`
-	Password string `json:"password" validate:"required"`
-}
 
 // RegisterBody defines the JSON body accepted by Register.
 type RegisterBody struct {
@@ -40,25 +36,23 @@ type UserPayload struct {
 // Login godoc
 //
 //	@Summary		Autenticar usuário
-//	@Description	Valida login e senha e retorna um token JWT com o identificador do usuário.
+//	@Description	Valida as credenciais enviadas no header Authorization, no formato Basic base64(usuario:senha), e retorna um token JWT com o identificador do usuário.
 //	@Tags			auth
-//	@Accept			json
 //	@Produce		json
-//	@Param			body	body		LoginBody	true	"Credenciais do usuário"
-//	@Success		200		{object}	LoginResponse
-//	@Failure		400		{object}	map[string]interface{}
-//	@Failure		401		{object}	map[string]string
-//	@Failure		500		{object}	map[string]string
+//	@Param			authorization	header		string	true	"Credenciais no formato Basic base64(usuario:senha)"
+//	@Success		200				{object}	LoginResponse
+//	@Failure		400				{object}	map[string]interface{}
+//	@Failure		401				{object}	map[string]string
+//	@Failure		500				{object}	map[string]string
 //	@Router			/auth/login [post]
 func Login(authGroup *echo.Group) {
 	authGroup.POST("/login", func(c *echo.Context) error {
-		var body LoginBody
-
-		if !bindAndValidate(c, &body) {
-			return nil
+		login, password, ok := basicAuthCredentials(c)
+		if !ok {
+			return c.JSON(http.StatusBadRequest, map[string]string{"error": "Credenciais inválidas no cabeçalho Authorization"})
 		}
 
-		user, err := database.GetUserByLogin(body.Login)
+		user, err := database.GetUserByLogin(login)
 		if errors.Is(err, database.ErrNotFound) {
 			return c.JSON(http.StatusUnauthorized, map[string]string{"error": "Login ou senha inválidos"})
 		}
@@ -66,7 +60,7 @@ func Login(authGroup *echo.Group) {
 			return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 		}
 
-		if err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(body.Password)); err != nil {
+		if err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(password)); err != nil {
 			return c.JSON(http.StatusUnauthorized, map[string]string{"error": "Login ou senha inválidos"})
 		}
 
@@ -92,6 +86,35 @@ func Login(authGroup *echo.Group) {
 			},
 		})
 	})
+}
+
+// basicAuthCredentials extracts the login and password from the Authorization
+// header. The value must contain "usuario:senha" encoded in base64 and may be
+// prefixed with "Basic ". It returns false when the header is missing or
+// malformed.
+func basicAuthCredentials(c *echo.Context) (string, string, bool) {
+	header := strings.TrimSpace(c.Request().Header.Get(echo.HeaderAuthorization))
+	if header == "" {
+		return "", "", false
+	}
+
+	// Accept both the standard "Basic <credentials>" scheme and the raw
+	// base64 value.
+	if len(header) >= len("Basic ") && strings.EqualFold(header[:len("Basic ")], "Basic ") {
+		header = strings.TrimSpace(header[len("Basic "):])
+	}
+
+	decoded, err := base64.StdEncoding.DecodeString(header)
+	if err != nil {
+		return "", "", false
+	}
+
+	login, password, ok := strings.Cut(string(decoded), ":")
+	if !ok || login == "" || password == "" {
+		return "", "", false
+	}
+
+	return login, password, true
 }
 
 // Register godoc

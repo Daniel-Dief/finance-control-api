@@ -90,7 +90,7 @@ Os testes usam **testcontainers** para criar um container PostgreSQL efêmero. N
 | Método | Rota | Descrição |
 |---|---|---|
 | `POST` | `/auth/register` | Criar novo usuário |
-| `POST` | `/auth/login` | Autenticar e obter token JWT |
+| `POST` | `/auth/login` | Autenticar com credenciais Basic (base64) e obter token JWT |
 
 ### 💓 Health Check (público)
 
@@ -170,10 +170,11 @@ Resposta paginada:
 
 **🔐 Login:**
 
+O header `Authorization` deve conter `Basic <base64(usuario:senha)>`. O prefixo `Basic ` é opcional.
+
 ```bash
 curl -X POST http://localhost:1323/auth/login \
-  -H "Content-Type: application/json" \
-  -d '{"login": "meulogin", "password": "minhasenha"}'
+  -H "Authorization: Basic $(printf 'meulogin:minhasenha' | base64)"
 ```
 
 **📁 Criar área (com token):**
