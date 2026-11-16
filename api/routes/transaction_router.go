@@ -22,11 +22,12 @@ type TransactionQueryParams struct {
 
 // TransactionBody defines the JSON body accepted by CreateTransaction.
 type TransactionBody struct {
-	Date       string `json:"date" validate:"required,datetime=2006-01-02"`
-	Amount     int    `json:"amount" validate:"required"`
-	CategoryID int    `json:"category_id" validate:"required,gt=0"`
-	AreaID     int    `json:"area_id" validate:"required,gt=0"`
-	Type       string `json:"type" validate:"required,oneof=income expense"`
+	Date              string  `json:"date" validate:"required,datetime=2006-01-02"`
+	Amount            int     `json:"amount" validate:"required"`
+	CategoryID        int     `json:"category_id" validate:"required,gt=0"`
+	AreaID            int     `json:"area_id" validate:"required,gt=0"`
+	Type              string  `json:"type" validate:"required,oneof=income expense"`
+	RecurrenceEndDate *string `json:"recurrence_end_date" validate:"omitempty,datetime=2006-01-02"`
 }
 
 // TransactionUpdateBody defines the JSON body accepted by UpdateTransaction. All
@@ -132,7 +133,7 @@ func GetTransactionByID(transactionGroup *echo.Group) {
 // CreateTransaction godoc
 //
 //	@Summary		Criar transação
-//	@Description	Cria uma nova transação (receita ou despesa) a partir dos dados informados.
+//	@Description	Cria uma nova transação (receita ou despesa). Se recurrence_end_date for informada, cria uma ocorrência mensal no mesmo dia até essa data (inclusive).
 //	@Tags			transactions
 //	@Accept			json
 //	@Produce		json
@@ -154,6 +155,10 @@ func CreateTransaction(transactionGroup *echo.Group) {
 			return nil
 		}
 
+		if body.RecurrenceEndDate != nil && *body.RecurrenceEndDate < body.Date {
+			return c.JSON(http.StatusBadRequest, map[string]interface{}{"error": "recurrence_end_date deve ser igual ou posterior à date"})
+		}
+
 		_, err = database.GetCategoryByID(userID, body.CategoryID)
 		if errors.Is(err, database.ErrNotFound) {
 			return c.JSON(http.StatusBadRequest, map[string]interface{}{"error": "Categoria não encontrada ou não pertence ao usuário"})
@@ -171,11 +176,12 @@ func CreateTransaction(transactionGroup *echo.Group) {
 		}
 
 		props := database.TransactionProps{
-			Date:       &body.Date,
-			Amount:     &body.Amount,
-			CategoryID: &body.CategoryID,
-			AreaID:     &body.AreaID,
-			Type:       &body.Type,
+			Date:              &body.Date,
+			Amount:            &body.Amount,
+			CategoryID:        &body.CategoryID,
+			AreaID:            &body.AreaID,
+			Type:              &body.Type,
+			RecurrenceEndDate: body.RecurrenceEndDate,
 		}
 
 		createdTransaction, err := database.CreateTransaction(userID, props)

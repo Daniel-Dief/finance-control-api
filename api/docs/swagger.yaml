@@ -305,6 +305,8 @@ definitions:
         type: integer
       date:
         type: string
+      recurrence_end_date:
+        type: string
       type:
         enum:
         - income
@@ -1396,8 +1398,8 @@ paths:
     post:
       consumes:
       - application/json
-      description: Cria uma nova transação (receita ou despesa) a partir dos dados
-        informados.
+      description: Cria uma nova transação (receita ou despesa). Se recurrence_end_date
+        for informada, cria uma ocorrência mensal no mesmo dia até essa data (inclusive).
       parameters:
       - description: Dados da nova transação
         in: body

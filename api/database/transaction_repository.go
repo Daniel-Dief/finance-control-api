@@ -9,11 +9,12 @@ import (
 )
 
 type TransactionProps struct {
-	Date       *string
-	Amount     *int
-	CategoryID *int
-	AreaID     *int
-	Type       *string
+	Date              *string
+	Amount            *int
+	CategoryID        *int
+	AreaID            *int
+	Type              *string
+	RecurrenceEndDate *string
 }
 
 type TransactionFilters struct {
@@ -102,6 +103,40 @@ func GetTransactionByID(userID, id int) (models.Transaction, error) {
 
 // CreateTransaction inserts a new transaction for the given user and returns the created transaction.
 func CreateTransaction(userID int, props TransactionProps) (models.Transaction, error) {
+	if props.RecurrenceEndDate != nil {
+		query := `
+			INSERT INTO "Transactions" ("Date", "Amount", "CategoryId", "AreaId", "Type", "UserId")
+			SELECT occurrence_date, $2, $3, $4, $5, $6
+			FROM (
+				SELECT (
+					month_start::date + LEAST(
+						EXTRACT(DAY FROM $1::date)::integer,
+						EXTRACT(DAY FROM (month_start + interval '1 month' - interval '1 day'))::integer
+					) - 1
+				)::date AS occurrence_date
+				FROM generate_series(
+					date_trunc('month', $1::date),
+					date_trunc('month', $7::date),
+					interval '1 month'
+				) AS months(month_start)
+			) AS occurrences
+			WHERE occurrence_date BETWEEN $1::date AND $7::date
+			ORDER BY occurrence_date
+			RETURNING "Id", "Date", "Amount", "CategoryId", "AreaId", "Type", "UserId"
+		`
+
+		var t models.Transaction
+		err := Pool.QueryRowContext(context.Background(),
+			query, props.Date, props.Amount, props.CategoryID, props.AreaID, props.Type, userID, props.RecurrenceEndDate).
+			Scan(&t.ID, &t.Date, &t.Amount, &t.CategoryID, &t.AreaID, &t.Type, &t.UserID)
+		if err != nil {
+			log.Println("Error executing recurring transaction query:", err)
+			return models.Transaction{}, ErrRegisterObject("transação")
+		}
+
+		return t, nil
+	}
+
 	query := `
 		INSERT INTO "Transactions" ("Date", "Amount", "CategoryId", "AreaId", "Type", "UserId")
 		VALUES ($1, $2, $3, $4, $5, $6)

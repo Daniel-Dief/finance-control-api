@@ -57,10 +57,10 @@ func TestListTransactionsWithFilters(t *testing.T) {
 	assert.NotEmpty(t, transactions.Data)
 
 	for _, tr := range transactions.Data {
-		database.DeleteTransaction(testUserID,tr.ID)
+		database.DeleteTransaction(testUserID, tr.ID)
 	}
-	database.DeleteCategory(testUserID,category.ID)
-	database.DeleteArea(testUserID,area.ID)
+	database.DeleteCategory(testUserID, category.ID)
+	database.DeleteArea(testUserID, area.ID)
 }
 
 func TestGetTransactionByID(t *testing.T) {
@@ -93,9 +93,9 @@ func TestGetTransactionByID(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, transaction.ID, response.ID)
 
-	database.DeleteTransaction(testUserID,transaction.ID)
-	database.DeleteCategory(testUserID,category.ID)
-	database.DeleteArea(testUserID,area.ID)
+	database.DeleteTransaction(testUserID, transaction.ID)
+	database.DeleteCategory(testUserID, category.ID)
+	database.DeleteArea(testUserID, area.ID)
 }
 
 func TestGetTransactionByIDNotFound(t *testing.T) {
@@ -149,10 +149,77 @@ func TestCreateTransaction(t *testing.T) {
 	assert.Equal(t, "2024-06-15T00:00:00Z", response["date"])
 
 	if id, ok := response["id"].(float64); ok {
-		database.DeleteTransaction(testUserID,int(id))
+		database.DeleteTransaction(testUserID, int(id))
 	}
-	database.DeleteCategory(testUserID,category.ID)
-	database.DeleteArea(testUserID,area.ID)
+	database.DeleteCategory(testUserID, category.ID)
+	database.DeleteArea(testUserID, area.ID)
+}
+
+func TestCreateRecurringTransaction(t *testing.T) {
+	e := setupEcho()
+
+	area, err := createTestArea("Recurring Transaction Test Area")
+	if err != nil {
+		t.Fatalf("Failed to create test area: %v", err)
+	}
+
+	category, err := createTestCategory("Recurring Transaction Test Category")
+	if err != nil {
+		t.Fatalf("Failed to create test category: %v", err)
+	}
+
+	body := fmt.Sprintf(`{"date":"2024-01-31","amount":200,"category_id":%d,"area_id":%d,"type":"expense","recurrence_end_date":"2024-04-30"}`, category.ID, area.ID)
+	req := httptest.NewRequest(http.MethodPost, "/transactions/create", strings.NewReader(body))
+	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+	rec := httptest.NewRecorder()
+
+	e.ServeHTTP(rec, req)
+
+	assert.Equal(t, http.StatusCreated, rec.Code)
+
+	from, to := "2024-01-01", "2024-04-30"
+	categoryID := category.ID
+	transactions, err := database.ListTransactions(testUserID, database.TransactionFilters{
+		CategoryID: &categoryID,
+		From:       &from,
+		To:         &to,
+	}, database.Pagination{Page: 1, Limit: 50})
+	assert.NoError(t, err)
+	if assert.NotNil(t, transactions) {
+		assert.Equal(t, 4, transactions.Total)
+		if assert.Len(t, transactions.Data, 4) {
+			assert.Equal(t, []string{
+				"2024-01-31T00:00:00Z",
+				"2024-02-29T00:00:00Z",
+				"2024-03-31T00:00:00Z",
+				"2024-04-30T00:00:00Z",
+			}, []string{
+				transactions.Data[0].Date,
+				transactions.Data[1].Date,
+				transactions.Data[2].Date,
+				transactions.Data[3].Date,
+			})
+		}
+		for _, transaction := range transactions.Data {
+			assert.NoError(t, database.DeleteTransaction(testUserID, transaction.ID))
+		}
+	}
+
+	database.DeleteCategory(testUserID, category.ID)
+	database.DeleteArea(testUserID, area.ID)
+}
+
+func TestCreateRecurringTransactionEndBeforeStart(t *testing.T) {
+	e := setupEcho()
+
+	body := `{"date":"2024-04-01","amount":200,"category_id":1,"area_id":1,"type":"expense","recurrence_end_date":"2024-03-31"}`
+	req := httptest.NewRequest(http.MethodPost, "/transactions/create", strings.NewReader(body))
+	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+	rec := httptest.NewRecorder()
+
+	e.ServeHTTP(rec, req)
+
+	assert.Equal(t, http.StatusBadRequest, rec.Code)
 }
 
 func TestCreateTransactionInvalidBody(t *testing.T) {
@@ -203,8 +270,8 @@ func TestCreateTransactionInvalidType(t *testing.T) {
 
 	assert.Equal(t, http.StatusBadRequest, rec.Code)
 
-	database.DeleteCategory(testUserID,category.ID)
-	database.DeleteArea(testUserID,area.ID)
+	database.DeleteCategory(testUserID, category.ID)
+	database.DeleteArea(testUserID, area.ID)
 }
 
 func TestCreateTransactionInvalidDate(t *testing.T) {
@@ -229,8 +296,8 @@ func TestCreateTransactionInvalidDate(t *testing.T) {
 
 	assert.Equal(t, http.StatusBadRequest, rec.Code)
 
-	database.DeleteCategory(testUserID,category.ID)
-	database.DeleteArea(testUserID,area.ID)
+	database.DeleteCategory(testUserID, category.ID)
+	database.DeleteArea(testUserID, area.ID)
 }
 
 func TestUpdateTransaction(t *testing.T) {
@@ -265,9 +332,9 @@ func TestUpdateTransaction(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, 250, response.Amount)
 
-	database.DeleteTransaction(testUserID,transaction.ID)
-	database.DeleteCategory(testUserID,category.ID)
-	database.DeleteArea(testUserID,area.ID)
+	database.DeleteTransaction(testUserID, transaction.ID)
+	database.DeleteCategory(testUserID, category.ID)
+	database.DeleteArea(testUserID, area.ID)
 }
 
 func TestUpdateTransactionNotFound(t *testing.T) {
@@ -326,8 +393,8 @@ func TestDeleteTransaction(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, "Transação excluída com sucesso", response["info"])
 
-	database.DeleteCategory(testUserID,category.ID)
-	database.DeleteArea(testUserID,area.ID)
+	database.DeleteCategory(testUserID, category.ID)
+	database.DeleteArea(testUserID, area.ID)
 }
 
 func TestDeleteTransactionNotFound(t *testing.T) {

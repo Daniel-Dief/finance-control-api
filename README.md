@@ -134,7 +134,7 @@ Os testes usam **testcontainers** para criar um container PostgreSQL efêmero. N
 |---|---|---|
 | `GET` | `/transactions/list?page=1&limit=50&type=&category_id=&area_id=&from=&to=` | Listar transações (paginado, filtros) |
 | `GET` | `/transactions/:id` | Obter transação por ID |
-| `POST` | `/transactions/create` | Criar nova transação |
+| `POST` | `/transactions/create` | Criar transação; opcionalmente, gerar recorrências mensais até `recurrence_end_date` (inclusiva) |
 | `PUT` | `/transactions/:id` | Atualizar transação |
 | `DELETE` | `/transactions/:id` | Excluir transação (soft delete) |
 

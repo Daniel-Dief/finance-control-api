@@ -1379,7 +1379,7 @@ const docTemplate = `{
         },
         "/transactions/create": {
             "post": {
-                "description": "Cria uma nova transação (receita ou despesa) a partir dos dados informados.",
+                "description": "Cria uma nova transação (receita ou despesa). Se recurrence_end_date for informada, cria uma ocorrência mensal no mesmo dia até essa data (inclusive).",
                 "consumes": [
                     "application/json"
                 ],
@@ -2162,6 +2162,9 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "date": {
+                    "type": "string"
+                },
+                "recurrence_end_date": {
                     "type": "string"
                 },
                 "type": {
