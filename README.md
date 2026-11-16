@@ -146,6 +146,7 @@ Os testes usam **testcontainers** para criar um container PostgreSQL efêmero. N
 | `GET` | `/reports/line-chart?year=&month=&type=` | Um ponto por dia do mês com `value` e `median` (últimos 6 meses, mesmo dia). `type` padrão `expense`. |
 | `GET` | `/reports/radar-chart?year=&month=&type=&area_ids=` | Valor e mediana por área ativa. `area_ids` opcional, separado por vírgula. `type` padrão `expense`. |
 | `GET` | `/reports/budgets?year=&month=` | Progresso de orçamentos das áreas ativas no mês (só despesas, estouro explícito). |
+| `GET` | `/reports/areas/:id/categories?type=` | Total de movimentações da área agrupado por categoria. `type` aceita `income` ou `expense` e, quando omitido, usa `expense`. |
 
 ### 📄 Paginação
 

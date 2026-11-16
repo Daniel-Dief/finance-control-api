@@ -69,6 +69,7 @@ func BindRoutes(echoAPI *echo.Echo) {
 	GetLineChart(reportGroup)
 	GetRadarChart(reportGroup)
 	GetBudgetReport(reportGroup)
+	GetAreaCategoryReport(reportGroup)
 }
 
 func HealthCheck(echoAPI *echo.Echo) {

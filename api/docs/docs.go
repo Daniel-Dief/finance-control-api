@@ -1049,6 +1049,76 @@ const docTemplate = `{
                 }
             }
         },
+        "/reports/areas/{id}/categories": {
+            "get": {
+                "description": "Retorna o total de transações agrupado por categoria para uma área do usuário.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "reports"
+                ],
+                "summary": "Relatório - Movimentação por categoria da área",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID da área",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "enum": [
+                            "income",
+                            "expense"
+                        ],
+                        "type": "string",
+                        "description": "Tipo (income ou expense, padrão expense)",
+                        "name": "type",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.AreaCategoryReport"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
         "/reports/budgets": {
             "get": {
                 "description": "Retorna progresso dos orçamentos do mês para áreas ativas.",
@@ -1727,6 +1797,40 @@ const docTemplate = `{
                 },
                 "user_id": {
                     "type": "integer"
+                }
+            }
+        },
+        "models.AreaCategoryReport": {
+            "type": "object",
+            "properties": {
+                "area_id": {
+                    "type": "integer"
+                },
+                "area_name": {
+                    "type": "string"
+                },
+                "categories": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.AreaCategoryReportItem"
+                    }
+                },
+                "type": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.AreaCategoryReportItem": {
+            "type": "object",
+            "properties": {
+                "amount": {
+                    "type": "integer"
+                },
+                "category_id": {
+                    "type": "integer"
+                },
+                "category_name": {
+                    "type": "string"
                 }
             }
         },

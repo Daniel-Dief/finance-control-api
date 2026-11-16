@@ -16,11 +16,11 @@ type LineChartPoint struct {
 }
 
 type LineChart struct {
-	Year          int               `json:"year"`
-	Month         int               `json:"month"`
-	Type          string            `json:"type"`
-	HistoryMonths int               `json:"history_months"`
-	Points        []LineChartPoint  `json:"points"`
+	Year          int              `json:"year"`
+	Month         int              `json:"month"`
+	Type          string           `json:"type"`
+	HistoryMonths int              `json:"history_months"`
+	Points        []LineChartPoint `json:"points"`
 }
 
 type RadarArea struct {
@@ -31,26 +31,39 @@ type RadarArea struct {
 }
 
 type RadarChart struct {
-	Year          int          `json:"year"`
-	Month         int          `json:"month"`
-	Type          string       `json:"type"`
-	HistoryMonths int          `json:"history_months"`
-	Areas         []RadarArea  `json:"areas"`
+	Year          int         `json:"year"`
+	Month         int         `json:"month"`
+	Type          string      `json:"type"`
+	HistoryMonths int         `json:"history_months"`
+	Areas         []RadarArea `json:"areas"`
 }
 
 type BudgetProgress struct {
-	ID        int     `json:"id"`
-	AreaID    int     `json:"area_id"`
-	AreaName  string  `json:"area_name"`
-	Amount    int     `json:"amount"`
-	Spent     int     `json:"spent"`
-	Remaining int     `json:"remaining"`
+	ID         int     `json:"id"`
+	AreaID     int     `json:"area_id"`
+	AreaName   string  `json:"area_name"`
+	Amount     int     `json:"amount"`
+	Spent      int     `json:"spent"`
+	Remaining  int     `json:"remaining"`
 	Percentage float64 `json:"percentage"`
-	Exceeded  bool    `json:"exceeded"`
+	Exceeded   bool    `json:"exceeded"`
 }
 
 type BudgetReport struct {
-	Year    int               `json:"year"`
-	Month   int               `json:"month"`
-	Budgets []BudgetProgress  `json:"budgets"`
+	Year    int              `json:"year"`
+	Month   int              `json:"month"`
+	Budgets []BudgetProgress `json:"budgets"`
+}
+
+type AreaCategoryReportItem struct {
+	CategoryID   int    `json:"category_id"`
+	CategoryName string `json:"category_name"`
+	Amount       int    `json:"amount"`
+}
+
+type AreaCategoryReport struct {
+	AreaID     int                      `json:"area_id"`
+	AreaName   string                   `json:"area_name"`
+	Type       string                   `json:"type"`
+	Categories []AreaCategoryReportItem `json:"categories"`
 }

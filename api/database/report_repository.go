@@ -180,11 +180,11 @@ func GetRadarChart(userID, year, month int, txType string, areaIDs []int) (model
 
 	// Get all active areas for user
 	areas := make([]models.RadarArea, 0)
-	
+
 	whereArea := `WHERE "StatusId" = $1 AND "UserId" = $2`
 	args := []interface{}{StatusActive, userID}
 	argPos := 3
-	
+
 	if len(areaIDs) > 0 {
 		placeholders := make([]string, len(areaIDs))
 		for i, aid := range areaIDs {
@@ -194,7 +194,7 @@ func GetRadarChart(userID, year, month int, txType string, areaIDs []int) (model
 		}
 		whereArea += ` AND "Id" IN (` + strings.Join(placeholders, ",") + `)`
 	}
-	
+
 	queryAreas := `SELECT "Id", "Name" FROM "Areas" ` + whereArea + ` ORDER BY "Name"`
 	rows, err := Pool.QueryContext(context.Background(), queryAreas, args...)
 	if err != nil {
@@ -202,7 +202,7 @@ func GetRadarChart(userID, year, month int, txType string, areaIDs []int) (model
 		return models.RadarChart{}, ErrGenericDatabase
 	}
 	defer rows.Close()
-	
+
 	type areaInfo struct {
 		id   int
 		name string
@@ -243,7 +243,7 @@ func GetRadarChart(userID, year, month int, txType string, areaIDs []int) (model
 			AreaID:   a.id,
 			AreaName: a.name,
 			Value:    int(currentValue),
-			Median: md,
+			Median:   md,
 		})
 	}
 
@@ -370,4 +370,40 @@ func GetBudgetReport(userID, year, month int) (models.BudgetReport, error) {
 		Month:   month,
 		Budgets: budgets,
 	}, nil
+}
+
+func GetAreaCategoryReport(userID, areaID int, txType string) ([]models.AreaCategoryReportItem, error) {
+	query := `
+		SELECT c."Id", c."Name", SUM(t."Amount")
+		FROM "Transactions" t
+		JOIN "Categories" c ON c."Id" = t."CategoryId" AND c."UserId" = t."UserId"
+		JOIN "Areas" a ON a."Id" = t."AreaId" AND a."UserId" = t."UserId"
+		WHERE t."StatusId" = $1 AND t."UserId" = $2 AND t."AreaId" = $3
+		AND t."Type" = $4 AND a."StatusId" = $1
+		GROUP BY c."Id", c."Name"
+		ORDER BY c."Name"
+	`
+
+	rows, err := Pool.QueryContext(context.Background(), query, StatusActive, userID, areaID, txType)
+	if err != nil {
+		log.Println("Error executing area category report query:", err)
+		return nil, ErrGenericDatabase
+	}
+	defer rows.Close()
+
+	categories := make([]models.AreaCategoryReportItem, 0)
+	for rows.Next() {
+		var category models.AreaCategoryReportItem
+		if err := rows.Scan(&category.CategoryID, &category.CategoryName, &category.Amount); err != nil {
+			log.Println("Error scanning area category report row:", err)
+			return nil, ErrBindQuery
+		}
+		categories = append(categories, category)
+	}
+	if rows.Err() != nil {
+		log.Println("Error with area category report rows:", rows.Err())
+		return nil, ErrProcessQuery
+	}
+
+	return categories, nil
 }

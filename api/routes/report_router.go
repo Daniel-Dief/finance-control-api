@@ -1,7 +1,9 @@
 package routes
 
 import (
+	"errors"
 	"finance-control-api/database"
+	"finance-control-api/models"
 	"net/http"
 	"strconv"
 	"strings"
@@ -21,10 +23,14 @@ type ReportLineParams struct {
 }
 
 type ReportRadarParams struct {
-	Year     *int    `query:"year" validate:"omitempty,min=1"`
-	Month    *int    `query:"month" validate:"omitempty,min=1,max=12"`
-	Type     *string `query:"type" validate:"omitempty,oneof=income expense"`
-	AreaIDs  string  `query:"area_ids"`
+	Year    *int    `query:"year" validate:"omitempty,min=1"`
+	Month   *int    `query:"month" validate:"omitempty,min=1,max=12"`
+	Type    *string `query:"type" validate:"omitempty,oneof=income expense"`
+	AreaIDs string  `query:"area_ids"`
+}
+
+type AreaCategoryReportParams struct {
+	Type *string `query:"type" validate:"omitempty,oneof=income expense"`
 }
 
 // GetKPIs godoc
@@ -244,5 +250,64 @@ func GetBudgetReport(reportGroup *echo.Group) {
 		}
 
 		return c.JSON(http.StatusOK, report)
+	})
+}
+
+// GetAreaCategoryReport godoc
+//
+//	@Summary		Relatório - Movimentação por categoria da área
+//	@Description	Retorna o total de transações agrupado por categoria para uma área do usuário.
+//	@Tags			reports
+//	@Accept			json
+//	@Produce		json
+//	@Param			id		path		int		true	"ID da área"
+//	@Param			type	query		string	false	"Tipo (income ou expense, padrão expense)"	Enums(income, expense)
+//	@Success		200		{object}	models.AreaCategoryReport
+//	@Failure		400		{object}	map[string]interface{}
+//	@Failure		401		{object}	map[string]interface{}
+//	@Failure		404		{object}	map[string]interface{}
+//	@Failure		500		{object}	map[string]interface{}
+//	@Router			/reports/areas/{id}/categories [get]
+func GetAreaCategoryReport(reportGroup *echo.Group) {
+	reportGroup.GET("/areas/:id/categories", func(c *echo.Context) error {
+		userID, err := currentUserID(c)
+		if err != nil {
+			return c.JSON(http.StatusUnauthorized, map[string]interface{}{"error": err.Error()})
+		}
+
+		var pathParams PathIDParams
+		if !bindAndValidatePath(c, &pathParams) {
+			return nil
+		}
+
+		var params AreaCategoryReportParams
+		if !bindAndValidateQuery(c, &params) {
+			return nil
+		}
+
+		area, err := database.GetAreaByID(userID, pathParams.ID)
+		if errors.Is(err, database.ErrNotFound) {
+			return c.JSON(http.StatusNotFound, map[string]interface{}{"error": "Área não encontrada"})
+		}
+		if err != nil {
+			return c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
+		}
+
+		txType := "expense"
+		if params.Type != nil {
+			txType = *params.Type
+		}
+
+		categories, err := database.GetAreaCategoryReport(userID, area.ID, txType)
+		if err != nil {
+			return c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
+		}
+
+		return c.JSON(http.StatusOK, models.AreaCategoryReport{
+			AreaID:     area.ID,
+			AreaName:   area.Name,
+			Type:       txType,
+			Categories: categories,
+		})
 	})
 }

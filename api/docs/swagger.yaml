@@ -69,6 +69,28 @@ definitions:
       user_id:
         type: integer
     type: object
+  models.AreaCategoryReport:
+    properties:
+      area_id:
+        type: integer
+      area_name:
+        type: string
+      categories:
+        items:
+          $ref: '#/definitions/models.AreaCategoryReportItem'
+        type: array
+      type:
+        type: string
+    type: object
+  models.AreaCategoryReportItem:
+    properties:
+      amount:
+        type: integer
+      category_id:
+        type: integer
+      category_name:
+        type: string
+    type: object
   models.Budget:
     properties:
       amount:
@@ -1023,6 +1045,55 @@ paths:
       summary: Listar categorias
       tags:
       - categories
+  /reports/areas/{id}/categories:
+    get:
+      consumes:
+      - application/json
+      description: Retorna o total de transações agrupado por categoria para uma área
+        do usuário.
+      parameters:
+      - description: ID da área
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Tipo (income ou expense, padrão expense)
+        enum:
+        - income
+        - expense
+        in: query
+        name: type
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.AreaCategoryReport'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Relatório - Movimentação por categoria da área
+      tags:
+      - reports
   /reports/budgets:
     get:
       consumes:
