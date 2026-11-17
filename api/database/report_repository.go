@@ -11,7 +11,7 @@ import (
 	"time"
 )
 
-func getCurrentYearMonth() (int, int) {
+func GetCurrentYearMonth() (int, int) {
 	now := time.Now()
 	return now.Year(), int(now.Month())
 }
@@ -39,7 +39,7 @@ func computeMedianInt(values []int64) int {
 
 func GetKPIs(userID, year, month int) (models.ReportKPIs, error) {
 	if year == 0 || month == 0 {
-		y, m := getCurrentYearMonth()
+		y, m := GetCurrentYearMonth()
 		year, month = y, m
 	}
 
@@ -71,7 +71,7 @@ func GetKPIs(userID, year, month int) (models.ReportKPIs, error) {
 
 func GetLineChart(userID, year, month int, txType string) (models.LineChart, error) {
 	if year == 0 || month == 0 {
-		y, m := getCurrentYearMonth()
+		y, m := GetCurrentYearMonth()
 		year, month = y, m
 	}
 	if txType == "" {
@@ -171,7 +171,7 @@ func getDayMedian(userID int, txType string, year, month, day int) int {
 
 func GetRadarChart(userID, year, month int, txType string, areaIDs []int) (models.RadarChart, error) {
 	if year == 0 || month == 0 {
-		y, m := getCurrentYearMonth()
+		y, m := GetCurrentYearMonth()
 		year, month = y, m
 	}
 	if txType == "" {
@@ -290,7 +290,7 @@ func getAreaMedian(userID int, txType string, areaID, year, month int) int {
 
 func GetBudgetReport(userID, year, month int) (models.BudgetReport, error) {
 	if year == 0 || month == 0 {
-		y, m := getCurrentYearMonth()
+		y, m := GetCurrentYearMonth()
 		year, month = y, m
 	}
 
@@ -372,7 +372,12 @@ func GetBudgetReport(userID, year, month int) (models.BudgetReport, error) {
 	}, nil
 }
 
-func GetAreaCategoryReport(userID, areaID int, txType string) ([]models.AreaCategoryReportItem, error) {
+func GetAreaCategoryReport(userID, areaID int, txType string, year, month int) ([]models.AreaCategoryReportItem, error) {
+	if year == 0 || month == 0 {
+		y, m := GetCurrentYearMonth()
+		year, month = y, m
+	}
+
 	query := `
 		SELECT c."Id", c."Name", SUM(t."Amount")
 		FROM "Transactions" t
@@ -380,11 +385,13 @@ func GetAreaCategoryReport(userID, areaID int, txType string) ([]models.AreaCate
 		JOIN "Areas" a ON a."Id" = t."AreaId" AND a."UserId" = t."UserId"
 		WHERE t."StatusId" = $1 AND t."UserId" = $2 AND t."AreaId" = $3
 		AND t."Type" = $4 AND a."StatusId" = $1
+		AND EXTRACT(YEAR FROM t."Date") = $5
+		AND EXTRACT(MONTH FROM t."Date") = $6
 		GROUP BY c."Id", c."Name"
 		ORDER BY c."Name"
 	`
 
-	rows, err := Pool.QueryContext(context.Background(), query, StatusActive, userID, areaID, txType)
+	rows, err := Pool.QueryContext(context.Background(), query, StatusActive, userID, areaID, txType, year, month)
 	if err != nil {
 		log.Println("Error executing area category report query:", err)
 		return nil, ErrGenericDatabase

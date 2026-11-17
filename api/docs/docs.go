@@ -1071,6 +1071,18 @@ const docTemplate = `{
                         "required": true
                     },
                     {
+                        "type": "integer",
+                        "description": "Ano (padrão mês atual)",
+                        "name": "year",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Mês (1-12, padrão mês atual)",
+                        "name": "month",
+                        "in": "query"
+                    },
+                    {
                         "enum": [
                             "income",
                             "expense"
@@ -1815,8 +1827,14 @@ const docTemplate = `{
                         "$ref": "#/definitions/models.AreaCategoryReportItem"
                     }
                 },
+                "month": {
+                    "type": "integer"
+                },
                 "type": {
                     "type": "string"
+                },
+                "year": {
+                    "type": "integer"
                 }
             }
         },

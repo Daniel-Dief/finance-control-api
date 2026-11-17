@@ -173,8 +173,14 @@ func TestGetAreaCategoryReport(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create transport category: %v", err)
 	}
+	previousMonthCategory, err := createTestCategory("Area Report Previous Month")
+	if err != nil {
+		t.Fatalf("Failed to create previous month category: %v", err)
+	}
 
-	today := time.Now().Format("2006-01-02")
+	now := time.Now()
+	today := now.Format("2006-01-02")
+	previousMonth := now.AddDate(0, -1, 0)
 	for _, transaction := range []struct {
 		amount     int
 		categoryID int
@@ -191,6 +197,9 @@ func TestGetAreaCategoryReport(t *testing.T) {
 			t.Fatalf("Failed to create test transaction: %v", err)
 		}
 	}
+	if _, err := createTestTransaction(previousMonth.Format("2006-01-02"), 99999, previousMonthCategory.ID, area.ID, "expense"); err != nil {
+		t.Fatalf("Failed to create previous month test transaction: %v", err)
+	}
 
 	req := httptest.NewRequest(http.MethodGet, fmt.Sprintf("/reports/areas/%d/categories", area.ID), nil)
 	rec := httptest.NewRecorder()
@@ -201,12 +210,40 @@ func TestGetAreaCategoryReport(t *testing.T) {
 	err = json.Unmarshal(rec.Body.Bytes(), &report)
 	assert.NoError(t, err)
 	assert.Equal(t, area.ID, report.AreaID)
+	assert.Equal(t, now.Year(), report.Year)
+	assert.Equal(t, int(now.Month()), report.Month)
 	assert.Equal(t, "expense", report.Type)
 	assert.Len(t, report.Categories, 2)
 	assert.Equal(t, 15000, report.Categories[0].Amount)
 	assert.Equal(t, foodCategory.ID, report.Categories[0].CategoryID)
 	assert.Equal(t, 7000, report.Categories[1].Amount)
 	assert.Equal(t, transportCategory.ID, report.Categories[1].CategoryID)
+
+	// Explicit current period must match the default (current month) result.
+	req = httptest.NewRequest(http.MethodGet, fmt.Sprintf("/reports/areas/%d/categories?year=%d&month=%d", area.ID, now.Year(), int(now.Month())), nil)
+	rec = httptest.NewRecorder()
+	e.ServeHTTP(rec, req)
+
+	assert.Equal(t, http.StatusOK, rec.Code)
+	err = json.Unmarshal(rec.Body.Bytes(), &report)
+	assert.NoError(t, err)
+	assert.Equal(t, now.Year(), report.Year)
+	assert.Equal(t, int(now.Month()), report.Month)
+	assert.Len(t, report.Categories, 2)
+
+	// A different month must return only that month's transactions.
+	req = httptest.NewRequest(http.MethodGet, fmt.Sprintf("/reports/areas/%d/categories?year=%d&month=%d", area.ID, previousMonth.Year(), int(previousMonth.Month())), nil)
+	rec = httptest.NewRecorder()
+	e.ServeHTTP(rec, req)
+
+	assert.Equal(t, http.StatusOK, rec.Code)
+	err = json.Unmarshal(rec.Body.Bytes(), &report)
+	assert.NoError(t, err)
+	assert.Equal(t, previousMonth.Year(), report.Year)
+	assert.Equal(t, int(previousMonth.Month()), report.Month)
+	assert.Len(t, report.Categories, 1)
+	assert.Equal(t, 99999, report.Categories[0].Amount)
+	assert.Equal(t, previousMonthCategory.ID, report.Categories[0].CategoryID)
 
 	req = httptest.NewRequest(http.MethodGet, fmt.Sprintf("/reports/areas/%d/categories?type=income", area.ID), nil)
 	rec = httptest.NewRecorder()
@@ -245,6 +282,22 @@ func TestGetAreaCategoryReportValidatesAreaAndType(t *testing.T) {
 	rec = httptest.NewRecorder()
 	e.ServeHTTP(rec, req)
 	assert.Equal(t, http.StatusNotFound, rec.Code)
+}
+
+func TestGetAreaCategoryReportPeriodValidation(t *testing.T) {
+	e := setupEcho()
+
+	area, err := createTestArea("Area Category Period Validation")
+	if err != nil {
+		t.Fatalf("Failed to create test area: %v", err)
+	}
+
+	for _, query := range []string{"year=2026", "month=5", "year=abc&month=5", "year=2026&month=13"} {
+		req := httptest.NewRequest(http.MethodGet, fmt.Sprintf("/reports/areas/%d/categories?%s", area.ID, query), nil)
+		rec := httptest.NewRecorder()
+		e.ServeHTTP(rec, req)
+		assert.Equal(t, http.StatusBadRequest, rec.Code, query)
+	}
 }
 
 func TestReportsPeriodValidation(t *testing.T) {

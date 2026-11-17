@@ -30,7 +30,9 @@ type ReportRadarParams struct {
 }
 
 type AreaCategoryReportParams struct {
-	Type *string `query:"type" validate:"omitempty,oneof=income expense"`
+	Year  *int    `query:"year" validate:"omitempty,min=1"`
+	Month *int    `query:"month" validate:"omitempty,min=1,max=12"`
+	Type  *string `query:"type" validate:"omitempty,oneof=income expense"`
 }
 
 // GetKPIs godoc
@@ -261,6 +263,8 @@ func GetBudgetReport(reportGroup *echo.Group) {
 //	@Accept			json
 //	@Produce		json
 //	@Param			id		path		int		true	"ID da área"
+//	@Param			year	query		int		false	"Ano (padrão mês atual)"
+//	@Param			month	query		int		false	"Mês (1-12, padrão mês atual)"
 //	@Param			type	query		string	false	"Tipo (income ou expense, padrão expense)"	Enums(income, expense)
 //	@Success		200		{object}	models.AreaCategoryReport
 //	@Failure		400		{object}	map[string]interface{}
@@ -285,6 +289,21 @@ func GetAreaCategoryReport(reportGroup *echo.Group) {
 			return nil
 		}
 
+		if (params.Year == nil) != (params.Month == nil) {
+			return c.JSON(http.StatusBadRequest, map[string]interface{}{"error": []string{"Os campos year e month devem ser enviados juntos ou omitidos juntos"}})
+		}
+
+		y, m := 0, 0
+		if params.Year != nil {
+			y = *params.Year
+		}
+		if params.Month != nil {
+			m = *params.Month
+		}
+		if y == 0 || m == 0 {
+			y, m = database.GetCurrentYearMonth()
+		}
+
 		area, err := database.GetAreaByID(userID, pathParams.ID)
 		if errors.Is(err, database.ErrNotFound) {
 			return c.JSON(http.StatusNotFound, map[string]interface{}{"error": "Área não encontrada"})
@@ -298,7 +317,7 @@ func GetAreaCategoryReport(reportGroup *echo.Group) {
 			txType = *params.Type
 		}
 
-		categories, err := database.GetAreaCategoryReport(userID, area.ID, txType)
+		categories, err := database.GetAreaCategoryReport(userID, area.ID, txType, y, m)
 		if err != nil {
 			return c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
 		}
@@ -306,6 +325,8 @@ func GetAreaCategoryReport(reportGroup *echo.Group) {
 		return c.JSON(http.StatusOK, models.AreaCategoryReport{
 			AreaID:     area.ID,
 			AreaName:   area.Name,
+			Year:       y,
+			Month:      m,
 			Type:       txType,
 			Categories: categories,
 		})

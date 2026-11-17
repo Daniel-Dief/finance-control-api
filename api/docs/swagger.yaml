@@ -79,8 +79,12 @@ definitions:
         items:
           $ref: '#/definitions/models.AreaCategoryReportItem'
         type: array
+      month:
+        type: integer
       type:
         type: string
+      year:
+        type: integer
     type: object
   models.AreaCategoryReportItem:
     properties:
@@ -1058,6 +1062,14 @@ paths:
         in: path
         name: id
         required: true
+        type: integer
+      - description: Ano (padrão mês atual)
+        in: query
+        name: year
+        type: integer
+      - description: Mês (1-12, padrão mês atual)
+        in: query
+        name: month
         type: integer
       - description: Tipo (income ou expense, padrão expense)
         enum:

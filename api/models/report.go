@@ -64,6 +64,8 @@ type AreaCategoryReportItem struct {
 type AreaCategoryReport struct {
 	AreaID     int                      `json:"area_id"`
 	AreaName   string                   `json:"area_name"`
+	Year       int                      `json:"year"`
+	Month      int                      `json:"month"`
 	Type       string                   `json:"type"`
 	Categories []AreaCategoryReportItem `json:"categories"`
 }
